@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  {{- if .Values.components.postgres }}
+  {{- include "postgres" . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.components.pgadmin4 }}
+  {{- include "pgadmin4" . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.components.redis }}
+  {{- include "redis" . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.components.apis_fastify }}
+  {{- include "apisFastify" . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.components.website_vue }}
+  {{- include "websiteVue" . | nindent 2 }}
+  {{- end }}
+{{- if .Values.docker.volumes }}
+{{ include "volumes" . }}
+{{- end }}
