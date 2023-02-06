@@ -13,9 +13,9 @@ website_vue:
     - ../website-vue/src:/app/src
     - ../website-vue/package.json:/app/package.json
   expose:
-    - "8080"
+    - "80"
   ports:
-    - "8080:8080"
+    - "8080:80"
   # -- --public 0.0.0.0:8080
   command: npm run serve
 {{- end }}

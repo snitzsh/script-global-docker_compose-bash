@@ -9,6 +9,9 @@ services:
   {{- if .Values.components.redis }}
   {{- include "redis" . | nindent 2 }}
   {{- end }}
+  {{- if .Values.components.redisinsight }}
+  {{- include "redisinsight" . | nindent 2 }}
+  {{- end }}
   {{- if .Values.components.apis_fastify }}
   {{- include "apisFastify" . | nindent 2 }}
   {{- end }}

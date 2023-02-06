@@ -11,3 +11,7 @@ Allows to build the platform images and running containers in local machine
 ## TODO
 
 - Auto assign ports.
+
+## Set UP Postgres GUI
+
+- https://towardsdatascience.com/how-to-run-postgresql-and-pgadmin-using-docker-3a6a8ae918b5

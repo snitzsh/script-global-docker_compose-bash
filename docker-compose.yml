@@ -4,40 +4,60 @@ version: "3.8"
 services:
   postgres:
     container_name: postgres
-    image: postgres:14.5-alpine
+    image: postgres
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB="snitch_db"
+    expose:
+      - "5432"
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - ./postgres/data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
   pgadmin4:
-    container_name: postgres-ui
+    container_name: postgres-gui
     image: dpage/pgadmin4
     restart: always
     environment:
-      - PGADMIN_DEFAULT_EMAIL=user@domain.com
-      - PGADMIN_DEFAULT_PASSWORD=secret
+      - PGADMIN_DEFAULT_EMAIL=root@snitch.com
+      - PGADMIN_DEFAULT_PASSWORD=root
     expose:
       - '80'
     ports:
-      - '3001:80'
+      - '5050:80'
+    volumes:
+      - ./pgadmin4:/var/lib/pgadmin
     links:
       - postgres
     depends_on:
       - postgres
   redis:
     container_name: redis
-    image: redis:7.0.4-alpine
+    image: redis
     restart: always
+    expose:
+      - "6379"
     ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass root
     volumes:
-      - redis:/data
+      - ./redis/data:/data
+      # - ./redis/config:/user/local/etc/redis
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    expose:
+      - "8001"
+    ports:
+      - '8001:8001'
+    volumes:
+      - ./redisinsight:/db
+    links:
+      - redis
+    depends_on:
+      - redis
   apis:
     # build:
     #   context: . # Directory of where the docker file is.
@@ -57,14 +77,14 @@ services:
     command: npm run local
     environment:
       NODE_ENV: 'local' # local | dev | qa | prod
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: postgres
-      REDIS_HOST: cache
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      POSTGRES_DB_HOST: db
+      POSTGRES_DB_PORT: 5432
+      POSTGRES_DB_USER: root
+      POSTGRES_DB_PASSWORD: root
+      POSTGRES_DB_NAME: snitch_db
+      REDIS_DB_HOST: cache
+      REDIS_DB_PORT: 6379
+      REDIS_DB_PASSWORD: root
     depends_on:
       - postgres
       - redis
@@ -85,13 +105,15 @@ services:
       - ../website-vue/src:/app/src
       - ../website-vue/package.json:/app/package.json
     expose:
-      - "8080"
+      - "80"
     ports:
-      - "8080:8080"
+      - "8080:80"
     # -- --public 0.0.0.0:8080
     command: npm run serve
 volumes:
   postgres:
     driver: local
   redis:
+    driver: local
+  redisinsight:
     driver: local

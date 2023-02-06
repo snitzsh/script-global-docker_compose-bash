@@ -18,14 +18,14 @@ apis:
   command: npm run local
   environment:
     NODE_ENV: 'local' # local | dev | qa | prod
-    DB_HOST: db
-    DB_PORT: 5432
-    DB_USER: postgres
-    DB_PASSWORD: postgres
-    DB_NAME: postgres
-    REDIS_HOST: cache
-    REDIS_PORT: 6379
-    REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    POSTGRES_DB_HOST: db
+    POSTGRES_DB_PORT: 5432
+    POSTGRES_DB_USER: {{ .Values.auth.username }}
+    POSTGRES_DB_PASSWORD: {{ .Values.auth.password }}
+    POSTGRES_DB_NAME: snitch_db
+    REDIS_DB_HOST: cache
+    REDIS_DB_PORT: 6379
+    REDIS_DB_PASSWORD: {{.Values.auth.password}}
   depends_on:
     - postgres
     - redis

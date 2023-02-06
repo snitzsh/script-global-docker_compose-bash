@@ -4,4 +4,6 @@ volumes:
     driver: local
   redis:
     driver: local
+  redisinsight:
+    driver: local
 {{- end }}

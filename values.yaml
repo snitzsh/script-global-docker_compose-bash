@@ -7,6 +7,7 @@ components:
   postgres: true
   pgadmin4: true
   redis: true
+  redisinsight: true
   apis_fastify: true # If microservice it will use `apis` property
   website_vue: true
 
@@ -17,6 +18,12 @@ docker:
 front-end:
   customer-facing: true
   admin-portal: true
+
+# Mainly for `local` development: redis, redisinsight, postgres, pgadmin4
+auth:
+  email: 'root@snitch.com'
+  username: 'root'
+  password: 'root'
 
 apis:
   # - api_
