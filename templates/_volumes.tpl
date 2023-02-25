@@ -6,4 +6,6 @@ volumes:
     driver: local
   redisinsight:
     driver: local
+  grafana:
+    driver: local
 {{- end }}

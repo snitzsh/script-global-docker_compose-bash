@@ -4,6 +4,7 @@
 
 infrastructure_type: monolithic # microservice | monolithic
 components:
+  grafana: true
   postgres: true
   pgadmin4: true
   redis: true

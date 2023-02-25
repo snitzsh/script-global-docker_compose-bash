@@ -49,7 +49,13 @@ snitchBuildImages() {
 # TODO
 # - Do dynamic pull ex: docker | ecr | etc.
 snitchPullRemoteImages() {
-  images=('redis' 'postgres' "dpage/pgadmin4" "redislabs/redisinsight")
+  images=(
+    "redis"
+    "postgres"
+    "grafana/grafana"
+    "dpage/pgadmin4"
+    "redislabs/redisinsight"
+  )
   for image in "${images[@]}"
   do
     echo "Pulling docker image for $image"

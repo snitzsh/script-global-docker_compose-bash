@@ -1,6 +1,6 @@
 {{- define "pgadmin4" -}}
 pgadmin4:
-  container_name: postgres-gui
+  container_name: pgadmin4
   image: dpage/pgadmin4
   restart: always
   environment:

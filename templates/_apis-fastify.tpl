@@ -18,7 +18,7 @@ apis:
   command: npm run local
   environment:
     NODE_ENV: 'local' # local | dev | qa | prod
-    POSTGRES_DB_HOST: db
+    POSTGRES_DB_HOST: postgres
     POSTGRES_DB_PORT: 5432
     POSTGRES_DB_USER: {{ .Values.auth.username }}
     POSTGRES_DB_PASSWORD: {{ .Values.auth.password }}

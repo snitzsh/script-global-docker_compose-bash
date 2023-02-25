@@ -18,7 +18,7 @@ services:
       - ./postgres/data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
   pgadmin4:
-    container_name: postgres-gui
+    container_name: pgadmin4
     image: dpage/pgadmin4
     restart: always
     environment:
@@ -58,6 +58,15 @@ services:
       - redis
     depends_on:
       - redis
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    restart: unless-stopped
+    ports:
+      - 9000:3000
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
   apis:
     # build:
     #   context: . # Directory of where the docker file is.
@@ -77,7 +86,7 @@ services:
     command: npm run local
     environment:
       NODE_ENV: 'local' # local | dev | qa | prod
-      POSTGRES_DB_HOST: db
+      POSTGRES_DB_HOST: postgres
       POSTGRES_DB_PORT: 5432
       POSTGRES_DB_USER: root
       POSTGRES_DB_PASSWORD: root
@@ -95,19 +104,19 @@ services:
     container_name: website-vue
     image: website-vue:latest
     restart: always
-    stdin_open: true
-    tty: true
-    environment:
-      - HOST=0.0.0.0
-      - CHOKIDAR_USEPOLLING=true
+    # stdin_open: true
+    # tty: true
+    # environment:
+      # - HOST=0.0.0.0:3000
+      # - CHOKIDAR_USEPOLLING=true
     volumes:
       # - ../website-vue/:/app
       - ../website-vue/src:/app/src
       - ../website-vue/package.json:/app/package.json
     expose:
-      - "80"
+      - "8080"
     ports:
-      - "8080:80"
+      - "8080:8080"
     # -- --public 0.0.0.0:8080
     command: npm run serve
 volumes:
@@ -116,4 +125,6 @@ volumes:
   redis:
     driver: local
   redisinsight:
+    driver: local
+  grafana:
     driver: local

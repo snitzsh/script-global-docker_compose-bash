@@ -223,3 +223,4 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 561, in connect
     raise TimeoutError("Timeout connecting to server")
 redis.exceptions.TimeoutError: Timeout connecting to server
+WARNING 2023-02-06 13:57:17,574 django.request Bad Request: /api/instance/9cf6a2b2-49ea-4e25-8a72-0d08fb8251c9/redisgraph/check-module-loaded/
