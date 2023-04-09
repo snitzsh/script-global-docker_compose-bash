@@ -35,7 +35,8 @@ snitchDockerComposeDown() {
 # * $1 = build-images : true | false
 snitchBuildImages() {
   # build_images=$1
-  repos_folder=("apis-fastify" "website-vue")
+  # "apis-fastify"
+  repos_folder=("apis-rust" "website-vue")
   for folder in "${repos_folder[@]}"
   do
     echo "Building image for $folder"

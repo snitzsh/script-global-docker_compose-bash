@@ -9,7 +9,8 @@ components:
   pgadmin4: true
   redis: true
   redisinsight: true
-  apis_fastify: true # If microservice it will use `apis` property
+  apis_fastify: false # If microservice it will use `apis` property
+  apis_rust: true
   website_vue: true
 
 docker:

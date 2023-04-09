@@ -18,6 +18,9 @@ services:
   {{- if .Values.components.apis_fastify }}
   {{- include "apisFastify" . | nindent 2 }}
   {{- end }}
+  {{- if .Values.components.apis_rust }}
+  {{- include "apisRust" . | nindent 2 }}
+  {{- end }}
   {{- if .Values.components.website_vue }}
   {{- include "websiteVue" . | nindent 2 }}
   {{- end }}

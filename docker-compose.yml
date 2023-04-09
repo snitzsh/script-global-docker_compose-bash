@@ -72,18 +72,16 @@ services:
     #   context: . # Directory of where the docker file is.
     #   dockerfile: Dockerfile # name of the docker file
     #   target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
-    container_name: apis-fastify
-    image: apis-fastify:latest
+    container_name: apis-rust
+    image: apis-rust:latest
     restart: always
     volumes:
-      - ../apis-fastify/src:/app/src
-      - ../apis-fastify/nodemon.json:/app/nodemon.json
-      - ../apis-fastify/server.js:/app/server.js
+      - ../apis-rust/src:/usr/src/apis-rust
     expose:
       - '3000'
     ports:
       - '3000:3000'
-    command: npm run local
+    command: api-rust
     environment:
       NODE_ENV: 'local' # local | dev | qa | prod
       POSTGRES_DB_HOST: postgres
