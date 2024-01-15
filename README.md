@@ -1,9 +1,13 @@
 # composer-docker
+
 Allows to build the platform images and running containers in local machine
 
-# Run commands
+## Run commands
 
-
+```bash
+# $opt: create | destroy
+bash main.sh <[opt]>
+```
 
 ## Tools
 > Main tools that must be install to be able to run this repo.

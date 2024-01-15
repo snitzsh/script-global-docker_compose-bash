@@ -36,7 +36,9 @@ snitchDockerComposeDown() {
 snitchBuildImages() {
   # build_images=$1
   # "apis-fastify"
-  repos_folder=("apis-rust" "website-vue")
+  # repos_folder=("apis-rust" "website-vue")
+  repos_folder=("apis-rust")
+
   for folder in "${repos_folder[@]}"
   do
     echo "Building image for $folder"
@@ -72,14 +74,17 @@ snitchDockerPruneNoneImages() {
   docker rmi $(docker images --filter “dangling=true” -q --no-trunc)
 }
 
+#
 # TODO:
-# - parse arguments like --arg=val
+# - support arguments like --arg=val
+#
 # ARGS
 # * $1 = create | destroy
 # NOTE: Only applies for apis-fastify
 # * $2 = architecture : monolithic | microservice
 # * $3 = build-images: | true | false
 # * $4 = pull-remote-images : true | false
+#
 main () {
   file_name="docker-compose.yml"
   if [[ $1 == "create" ]]; then
@@ -91,7 +96,7 @@ main () {
     snitchDockerComposeUp ${file_name}
     # Gets the API of postgress
     # docker inspect <[postgres-container-id] | grep IPAddress
-  else
+  elif [[ $1 == "destroy" ]]; then
     snitchDockerComposeDown ${file_name}
   fi
 }

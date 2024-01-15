@@ -11,7 +11,7 @@ components:
   redisinsight: true
   apis_fastify: false # If microservice it will use `apis` property
   apis_rust: true
-  website_vue: true
+  website_vue: false
 
 docker:
   volumes: true
