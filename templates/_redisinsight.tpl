@@ -10,7 +10,7 @@ redisinsight:
   ports:
     - '8001:8001'
   volumes:
-    - ./redisinsight:/db
+    - ./volumes/redisinsight:/db
   links:
     - redis
   depends_on:

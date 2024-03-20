@@ -11,6 +11,6 @@ redis:
     - "6379:6379"
   command: redis-server --save 20 1 --loglevel warning --requirepass {{ .Values.auth.password }}
   volumes:
-    - ./redis/data:/data
+    - ./volumes/redis/data:/data
     # - ./redis/config:/user/local/etc/redis
 {{- end }}

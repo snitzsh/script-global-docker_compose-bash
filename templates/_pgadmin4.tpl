@@ -11,7 +11,7 @@ pgadmin4:
   ports:
     - '5050:80'
   volumes:
-    - ./pgadmin4:/var/lib/pgadmin
+    - ./volumes/pgadmin4:/var/lib/pgadmin
   links:
     - postgres
   depends_on:

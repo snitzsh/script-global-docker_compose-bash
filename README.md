@@ -2,6 +2,11 @@
 
 Allows to build the platform images and running containers in local machine
 
+## Notes
+
+This is not a helm-chart to deploy in k8s. This a helm-chart to just build the
+docker-composer.yaml.
+
 ## Run commands
 
 ```bash
@@ -10,6 +15,7 @@ bash main.sh <[opt]>
 ```
 
 ## Tools
+
 > Main tools that must be install to be able to run this repo.
 
 - bash

@@ -15,8 +15,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres/data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./volumes/postgres/data:/var/lib/postgresql/data
+      - ./volumes/postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
   pgadmin4:
     container_name: pgadmin4
     image: dpage/pgadmin4
@@ -29,7 +29,7 @@ services:
     ports:
       - '5050:80'
     volumes:
-      - ./pgadmin4:/var/lib/pgadmin
+      - ./volumes/pgadmin4:/var/lib/pgadmin
     links:
       - postgres
     depends_on:
@@ -44,7 +44,7 @@ services:
       - "6379:6379"
     command: redis-server --save 20 1 --loglevel warning --requirepass root
     volumes:
-      - ./redis/data:/data
+      - ./volumes/redis/data:/data
       # - ./redis/config:/user/local/etc/redis
   redisinsight:
     image: redislabs/redisinsight:latest
@@ -53,7 +53,7 @@ services:
     ports:
       - '8001:8001'
     volumes:
-      - ./redisinsight:/db
+      - ./volumes/redisinsight:/db
     links:
       - redis
     depends_on:
@@ -65,39 +65,8 @@ services:
     ports:
       - 9000:3000
     volumes:
-      - ./grafana/data:/var/lib/grafana
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-  apis:
-    # build:
-    #   context: . # Directory of where the docker file is.
-    #   dockerfile: Dockerfile # name of the docker file
-    #   target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
-    container_name: apis-rust
-    image: apis-rust:latest
-    restart: always
-    volumes:
-      - ../apis-rust/src:/usr/src/apis-rust
-    expose:
-      - '3000'
-    ports:
-      - '3000:3000'
-    command: api-rust
-    environment:
-      NODE_ENV: 'local' # local | dev | qa | prod
-      POSTGRES_DB_HOST: postgres
-      POSTGRES_DB_PORT: 5432
-      POSTGRES_DB_USER: root
-      POSTGRES_DB_PASSWORD: root
-      POSTGRES_DB_NAME: snitch_db
-      REDIS_DB_HOST: cache
-      REDIS_DB_PORT: 6379
-      REDIS_DB_PASSWORD: root
-    depends_on:
-      - postgres
-      - redis
-    links:
-      - postgres
-      - redis
+      - ./volumes/grafana/data:/var/lib/grafana
+      - ./volumes/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
 volumes:
   postgres:
     driver: local

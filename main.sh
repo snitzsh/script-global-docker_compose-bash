@@ -16,16 +16,16 @@
 
 # Args:
 # * $1 = file_name
-snitchDockerComposeUp () {
+dockerComposeUp () {
   file_name=$1
-  docker-compose -f "./${file_name}" up
+  docker compose -f "./${file_name}" up --build --detach --force-recreate
 }
 
 # Args
 #* $1 = file_name
-snitchDockerComposeDown() {
+dockerComposeDown() {
   file_name=$1
-  docker-compose -f "./${file_name}" down
+  docker compose -f "./${file_name}" down
 }
 # TODO:
 #   - check if needs to build or not. maybe have a cache file with true false
@@ -51,7 +51,9 @@ snitchBuildImages() {
 
 # TODO
 # - Do dynamic pull ex: docker | ecr | etc.
-snitchPullRemoteImages() {
+# NOTE:
+# - No neeed to pull anymore. docker compose will pull it automatically.
+publicPullRemoteImages() {
   images=(
     "redis"
     "postgres"
@@ -88,16 +90,17 @@ snitchDockerPruneNoneImages() {
 main () {
   file_name="docker-compose.yml"
   if [[ $1 == "create" ]]; then
-    snitchBuildImages
-    snitchPullRemoteImages
+    # snitchBuildImages
+    # publicPullRemoteImages
     # snitchDockerPruneNoneImages
     # --set components.postgres=true
-    helm template render . --debug > "./${file_name}"
-    snitchDockerComposeUp ${file_name}
+    # helm template render . --debug > "./${file_name}"
+    helm template . > "./${file_name}"
+    dockerComposeUp ${file_name}
     # Gets the API of postgress
     # docker inspect <[postgres-container-id] | grep IPAddress
   elif [[ $1 == "destroy" ]]; then
-    snitchDockerComposeDown ${file_name}
+    dockerComposeDown ${file_name}
   fi
 }
 
