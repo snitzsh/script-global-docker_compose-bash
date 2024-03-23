@@ -27,3 +27,6 @@ services:
 {{- if .Values.docker.volumes }}
 {{ include "volumes" . }}
 {{- end }}
+{{- if .Values.docker.networks }}
+{{ include "networks" . }}
+{{- end }}

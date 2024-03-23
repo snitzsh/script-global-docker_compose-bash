@@ -4,7 +4,7 @@
 
 infrastructure_type: monolithic # microservice | monolithic
 components:
-  grafana: true
+  grafana: false
   postgres: true
   pgadmin4: true
   redis: true
@@ -15,15 +15,23 @@ components:
 
 docker:
   volumes: true
+  networks: true
 
-# All Microservice API will be dynamically place here... if empty it will do `monolithic` build
+# All Microservice API will be dynamically place here... if empty it will
+# do `monolithic` build
 front-end:
   customer-facing: true
   admin-portal: true
 
-# Mainly for `local` development: redis, redisinsight, postgres, pgadmin4
+#
+# IMPORTANT:
+#   - when changing the auth, make sure to do `docker system prune --all --force`
+#     otherwise it will cache the old auth or other configs. Remove volumes/
+#
+# NOTE:
+#   - Mainly for `local` development: redis, redisinsight, postgres, pgadmin4
 auth:
-  email: 'root@snitch.com'
+  email: 'root@snitzsh.com'
   username: 'root'
   password: 'root'
 

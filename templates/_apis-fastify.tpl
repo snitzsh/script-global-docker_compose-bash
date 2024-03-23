@@ -1,10 +1,13 @@
 {{- define "apisFastify" -}}
 apis:
-  # build:
-  #   context: . # Directory of where the docker file is.
-  #   dockerfile: Dockerfile # name of the docker file
-  #   target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
+  {{- /*
+    # build:
+    #   context: . # Directory of where the docker file is.
+    #   dockerfile: Dockerfile # name of the docker file
+    #   target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
+  */}}
   container_name: apis-fastify
+  hostname: apis-fastify
   image: apis-fastify:latest
   restart: always
   volumes:
@@ -17,7 +20,10 @@ apis:
     - '3000:3000'
   command: npm run local
   environment:
-    NODE_ENV: 'local' # local | dev | qa | prod
+    {{- /*
+      # local | dev | qa | prod
+    */}}
+    NODE_ENV: 'local'
     POSTGRES_DB_HOST: postgres
     POSTGRES_DB_PORT: 5432
     POSTGRES_DB_USER: {{ .Values.auth.username }}

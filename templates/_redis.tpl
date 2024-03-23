@@ -1,10 +1,15 @@
-# https://github.com/redis/redis/blob/unstable/redis.conf
-# https://www.docker.com/blog/how-to-use-the-redis-docker-official-image/
+{{- /*
+https://github.com/redis/redis/blob/unstable/redis.conf
+https://www.docker.com/blog/how-to-use-the-redis-docker-official-image/
+*/}}
 {{- define "redis" -}}
 redis:
   container_name: redis
-  image: redis
+  hostname: redis
+  image: redis:latest
   restart: always
+  environment:
+    REDIS_USERNAME: {{ .Values.auth.username }}
   expose:
     - "6379"
   ports:
@@ -12,5 +17,9 @@ redis:
   command: redis-server --save 20 1 --loglevel warning --requirepass {{ .Values.auth.password }}
   volumes:
     - ./volumes/redis/data:/data
-    # - ./redis/config:/user/local/etc/redis
+    {{- /*
+      - ./redis/config:/user/local/etc/redis
+    */}}
+  networks:
+    - redis
 {{- end }}

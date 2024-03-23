@@ -96,6 +96,7 @@ main () {
     # --set components.postgres=true
     # helm template render . --debug > "./${file_name}"
     helm template . > "./${file_name}"
+    sleep 5
     dockerComposeUp ${file_name}
     # Gets the API of postgress
     # docker inspect <[postgres-container-id] | grep IPAddress

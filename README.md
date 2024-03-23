@@ -14,6 +14,15 @@ docker-composer.yaml.
 bash main.sh <[opt]>
 ```
 
+## Connect to Postgres
+
+```bash
+# TODO:
+# - find out why docker compose creates a db quoted!
+# Hosted by Docker.
+psql -h localhost -p 5432 -U root -d \"snitch_db\"
+```
+
 ## Tools
 
 > Main tools that must be install to be able to run this repo.
@@ -25,6 +34,8 @@ bash main.sh <[opt]>
 ## TODO
 
 - Auto assign ports.
+- Create redis.conf file to play around with redis configurations
+- Create postgres.config file to play around with redis configurations
 
 ## Set UP Postgres GUI
 

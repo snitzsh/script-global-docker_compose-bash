@@ -4,12 +4,13 @@ version: "3.8"
 services:
   postgres:
     container_name: postgres
-    image: postgres
+    hostname: postgres
+    image: postgres:latest
     restart: always
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB="snitch_db"
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: snitzsh_db
     expose:
       - "5432"
     ports:
@@ -17,27 +18,33 @@ services:
     volumes:
       - ./volumes/postgres/data:/var/lib/postgresql/data
       - ./volumes/postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    networks:
+      - postgres
   pgadmin4:
     container_name: pgadmin4
-    image: dpage/pgadmin4
+    hostname: pgadmin4
+    image: dpage/pgadmin4:latest
     restart: always
     environment:
-      - PGADMIN_DEFAULT_EMAIL=root@snitch.com
-      - PGADMIN_DEFAULT_PASSWORD=root
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
     expose:
       - '80'
     ports:
       - '5050:80'
     volumes:
       - ./volumes/pgadmin4:/var/lib/pgadmin
-    links:
+    networks:
       - postgres
     depends_on:
       - postgres
   redis:
     container_name: redis
-    image: redis
+    hostname: redis
+    image: redis:latest
     restart: always
+    environment:
+      REDIS_USERNAME: root
     expose:
       - "6379"
     ports:
@@ -45,28 +52,20 @@ services:
     command: redis-server --save 20 1 --loglevel warning --requirepass root
     volumes:
       - ./volumes/redis/data:/data
-      # - ./redis/config:/user/local/etc/redis
+    networks:
+      - redis
   redisinsight:
+    container_name: redisinsight
+    hostname: redisinsight
     image: redislabs/redisinsight:latest
-    expose:
-      - "8001"
     ports:
-      - '8001:8001'
+      - 5540:5540
     volumes:
       - ./volumes/redisinsight:/db
-    links:
+    networks:
       - redis
     depends_on:
       - redis
-  grafana:
-    container_name: grafana
-    image: grafana/grafana
-    restart: unless-stopped
-    ports:
-      - 9000:3000
-    volumes:
-      - ./volumes/grafana/data:/var/lib/grafana
-      - ./volumes/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
 volumes:
   postgres:
     driver: local
@@ -76,3 +75,8 @@ volumes:
     driver: local
   grafana:
     driver: local
+networks:
+  redis:
+    driver: bridge
+  postgres:
+    driver: bridge
