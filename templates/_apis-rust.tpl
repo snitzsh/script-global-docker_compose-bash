@@ -1,4 +1,5 @@
 {{- define "apisRust" -}}
+{{- $component_name := "api-rust" -}}
 apis:
   {{- /*
     build:
@@ -6,17 +7,10 @@ apis:
       dockerfile: Dockerfile # name of the docker file
       target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
   */}}
-  container_name: apis-rust
-  hostname: apis-rust
-  image: apis-rust:latest
+  container_name: {{ $component_name }}
+  hostname: {{ $component_name }}
+  image: "{{ $component_name }}:latest"
   restart: always
-  volumes:
-    - ../apis-rust/src:/usr/src/apis-rust
-  expose:
-    - '3000'
-  ports:
-    - '3000:3000'
-  command: api-rust
   environment:
     {{- /*
       local | dev | qa | prod
@@ -31,6 +25,17 @@ apis:
     REDIS_DB_PORT: 6379
     REDIS_DB_USERNAME: {{.Values.auth.username}}
     REDIS_DB_PASSWORD: {{.Values.auth.password}}
+  volumes:
+    - "./volumes/{{ $component_name }}/src:/usr/src/{{ $component_name }}"
+  labels:
+    - "com.docker.compose.service=private"
+    - "com.docker.compose.component-name={{ $component_name }}"
+    - "com.docker.compose.component-type=apis"
+  expose:
+    - '3000'
+  ports:
+    - '3000:3000'
+  command: api-rust
   depends_on:
     - postgres
     - redis

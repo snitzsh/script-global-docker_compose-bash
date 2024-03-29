@@ -2,6 +2,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+#
+# TODO:
+# - Make sure you throw an error if other component is unsing the same port
+#
 infrastructure_type: monolithic # microservice | monolithic
 components:
   grafana: false

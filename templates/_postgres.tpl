@@ -1,32 +1,38 @@
+{{- /*
+TODO:
+  - Support multi db per app.
+*/}}
 {{- define "postgres" -}}
+{{- $component_name := "postgres" -}}
 postgres:
-  container_name: postgres
-  hostname: postgres
-  image: postgres:latest
+  container_name: {{ $component_name }}
+  hostname: {{ $component_name }}
+  image: "{{ $component_name }}:latest"
   restart: always
   environment:
     POSTGRES_USER: {{ .Values.auth.username }}
     POSTGRES_PASSWORD: {{ .Values.auth.password }}
-    {{- /*
-      IMPORTANT:
-        - Do not quote the database, else it will think it does not exist when ssh
-          it thinks "snitzsh_db" instead of snitch
-
-      POSTGRES_DB: snitzsh_db
-    */}}
     POSTGRES_DB: snitzsh_db
+    {{- /*
+      # Additional databases
+      DB1_NAME: mydb1
+      DB1_USER: db1user
+      DB1_PASSWORD: db1password
+      DB2_NAME: mydb2
+      DB2_USER: db2user
+      DB2_PASSWORD: db2password
+    */}}
+  volumes:
+    - "./volumes/{{ $component_name }}/data:/var/lib/postgresql/data"
+    - "./volumes/{{ $component_name }}/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+  labels:
+    - "com.docker.compose.service=public"
+    - "com.docker.compose.component-name={{ $component_name }}"
+    - "com.docker.compose.component-type=db"
   expose:
     - "5432"
   ports:
     - "5432:5432"
-  volumes:
-    - ./volumes/postgres/data:/var/lib/postgresql/data
-    {{- /*
-      NOTE:
-      - use thi belog item to point to our own configurations. in ./configs
-    - ./configs/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
-    */}}
-    - ./volumes/postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
   networks:
     - postgres
 {{- end }}

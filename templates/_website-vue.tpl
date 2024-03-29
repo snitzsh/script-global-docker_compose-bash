@@ -1,8 +1,10 @@
 {{- define "websiteVue" -}}
+{{- $component_name := "website-vue" -}}
 website_vue:
-  container_name: website-vue
-  image: website-vue:latest
+  container_name: {{ $component_name }}
+  image: "{{ $component_name }}:latest"
   restart: always
+  environment: {}
   {{- /*
     stdin_open: true
     tty: true
@@ -14,8 +16,12 @@ website_vue:
     {{- /*
       - ../website-vue/:/app
     */}}
-    - ../website-vue/src:/app/src
-    - ../website-vue/package.json:/app/package.json
+    - "./volumes/{{ $component_name }}/src:/app/src"
+    - "./volumes/{{ $component_name }}/package.json:/app/package.json"
+  labels:
+    - "com.docker.compose.service=private"
+    - "com.docker.compose.component-name={{ $component_name }}"
+    - "com.docker.compose.component-type=ui"
   expose:
     - "8080"
   ports:
