@@ -104,5 +104,9 @@ main () {
     dockerComposeDown ${file_name}
   fi
 }
-
+# TODO:
+# - user docker secret volume (maybe copy or point to .env of each application)
+# - pass a flag to clear local volumes. per component or all.
+#     docker-compose rm -s -f <service_name> (this command will not delete local volumes)
+#
 main $1
