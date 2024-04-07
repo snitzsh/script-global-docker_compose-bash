@@ -2,11 +2,11 @@
 TODO:
   - build image per VITE_APP_PLATFORM_COMPONENTS
 */}}
-{{- define "mainVue" -}}
+{{- define "main-vue" -}}
 {{- $component_name := "main-vue" -}}
 {{- $path := .Values.main_vue_env.path -}}
 {{- $workdir := .Values.main_vue_env._workdir -}}
-main_vue:
+main-vue:
   container_name: {{ $component_name }}
   image: "{{ $component_name }}"
   restart: "always"

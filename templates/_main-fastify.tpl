@@ -1,7 +1,7 @@
-{{- define "apisFastify" -}}
-{{- $component_name := "apis-fastify" -}}
+{{- define "main-fastify" -}}
+{{- $component_name := "main-fastify" -}}
 {{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "postgres" "redis")) -}}
-apis:
+main-fastify:
   {{- /*
     # build:
     #   context: . # Directory of where the docker file is.

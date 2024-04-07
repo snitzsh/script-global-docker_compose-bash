@@ -5,7 +5,7 @@ TODO:
 {{- define "postgres" -}}
 {{- $component_name := "postgres" -}}
 {{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "postgres") "data_type" "array") -}}
-postgres:
+{{ "postgres" }}:
   container_name: {{ $component_name }}
   hostname: {{ $component_name }}
   image: "{{ $component_name }}:latest"

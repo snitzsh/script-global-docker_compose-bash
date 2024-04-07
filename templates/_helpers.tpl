@@ -1,5 +1,48 @@
 {{- /*
 TODO:
+  - null
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Creates a `networks` for a component.
+
+ARGS:
+  - $global = .Values
+
+RETURN:
+  - `{volumes: {component-name: driver: <[name]> }}` or `Null`
+*/}}
+{{- define "docker-compose.functions.services" -}}
+  {{- $apps := .Values.apps -}}
+  {{- $components := .Values.components -}}
+  {{- $public := $components.public -}}
+  {{- $private := $components.private -}}
+  {{- range $apps }}
+    {{- $app_name := . -}}
+    {{- range $software_type, $software_type_components := $components }}
+      {{- range $key, $value := $software_type_components }}
+        {{- if eq $software_type "public" }}
+          {{- if $value }}
+            {{- include $key $ | nindent 2 }}
+          {{- end }}
+        {{- /* private */}}
+        {{- else }}
+          {{- /* loops: apis, uis */}}
+          {{- range $private_key, $private_value := $value }}
+            {{- if $private_value }}
+              {{- include $private_key (dict "globals" $ "app_name" $app_name "software_type" $software_type "component_type" $key "component_name" $private_key ) | nindent 2 }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- /*
+TODO:
   - find out how to return `depends_on: []` without needing to indent when
     calling the function.
 

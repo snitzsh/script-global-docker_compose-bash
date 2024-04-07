@@ -6,14 +6,13 @@
 # - Pass password from a config file so that apis-fastify
 #   can have access to postgres and redis.
 # - add https://redis.com/redis-enterprise/redis-insight/ to tools
-# - get the container id for redis and postgres to get the host api-address
-#   find out how to pass it on the redisinsight and pgadmin4 to prevent
-#   creating a db connection everytime.
 #   ex: docker inspect <[postgres-container-id] | grep IPAddress
 
 # Bash Version
 # echo $(bash --version)
 
+# NOTES:
+# - https://docs.docker.com/compose/reference/
 # Args:
 # * $1 = file_name
 dockerComposeUp () {

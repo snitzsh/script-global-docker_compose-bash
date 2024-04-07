@@ -9,14 +9,18 @@
 # - findout why can't I use `-` , right now I am using `_` as .components[].this_key
 #
 
-app: snitzsh
+apps:
+  - snitzsh
+
+platform:
+  architecture: arm64 # linux: amd64 | mac m*: arm64
 
 env:
   cluster_name: dev
   cluster_type: local
 
-main_rust_env:
-  path: "../../../apis/snitzsh/main-rust"
+apis-snitzsh-main-rust:
+  path: "../../../"
   _workdir: /app
   docker_target: "dev-stage"
   # TODO:
@@ -26,8 +30,8 @@ main_rust_env:
   host: "0.0.0.0"
   port: "3000" # this will be dynamic handled by helm
 
-main_vue_env:
-  path: "../../../uis/snitzsh/main-vue"
+uis-snitzsh-main-vue:
+  path: "../../../"
   _workdir: /app
   docker_target: "dev-stage"
   target_script: "dev" # .scripts{} in package.json
@@ -35,14 +39,18 @@ main_vue_env:
   port: "8080" # this will be dynamic handled by helm
 
 components:
-  grafana: false
-  postgres: true
-  pgadmin4: true
-  redis: false
-  redisinsight: false
-  apis_fastify: false # If microservice it will use `apis` property
-  apis_rust: false
-  main_vue: false
+  public:
+    grafana: true
+    pgadmin4: false
+    postgres: true
+    redis: false
+    redisinsight: false
+  private:
+    apis:
+      main-fastify: false # If microservice it will use `apis` property
+      main-rust: true
+    uis:
+      main-vue: false
 
 docker:
   volumes: true

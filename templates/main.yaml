@@ -1,32 +1,13 @@
+{{- $components := .Values.components -}}
+{{- $docker := .Values.docker -}}
+{{- $posgres_name := "postgres" -}}
+
 version: "3.8"
 services:
-  {{- if .Values.components.postgres }}
-  {{- include "postgres" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.pgadmin4 }}
-  {{- include "pgadmin4" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.redis }}
-  {{- include "redis" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.redisinsight }}
-  {{- include "redisinsight" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.grafana }}
-  {{- include "grafana" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.apis_fastify }}
-  {{- include "apisFastify" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.apis_rust }}
-  {{- include "apisRust" . | nindent 2 }}
-  {{- end }}
-  {{- if .Values.components.main_vue }}
-  {{- include "mainVue" . | nindent 2 }}
-  {{- end }}
-{{- if .Values.docker.volumes }}
+  {{- include "docker-compose.functions.services" . }}
+{{- if $docker.volumes }}
 {{- include "volumes" . }}
 {{- end }}
-{{- if .Values.docker.networks }}
+{{- if $docker.networks }}
 {{- include "networks" . }}
 {{- end }}
