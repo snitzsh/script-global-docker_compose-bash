@@ -22,4 +22,4 @@ Chart.lock
 # --- END AUTOMATED ---
 
 # TODO: make this part of the automated
-volumes/*
+volumes

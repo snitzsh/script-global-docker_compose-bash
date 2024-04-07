@@ -1,5 +1,7 @@
 {{- define "pgadmin4" -}}
 {{- $component_name := "pgadmin4" -}}
+{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "postgres")) -}}
+{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "postgres") "data_type" "array") -}}
 pgadmin4:
   container_name: {{ $component_name }}
   hostname: {{ $component_name }}
@@ -18,8 +20,6 @@ pgadmin4:
     - '80'
   ports:
     - '5050:80'
-  networks:
-    - postgres
-  depends_on:
-    - postgres
+  {{- $networks | indent 2 }}
+  {{- $depends_on | indent 2 }}
 {{- end }}

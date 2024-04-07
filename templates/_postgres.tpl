@@ -4,6 +4,7 @@ TODO:
 */}}
 {{- define "postgres" -}}
 {{- $component_name := "postgres" -}}
+{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "postgres") "data_type" "array") -}}
 postgres:
   container_name: {{ $component_name }}
   hostname: {{ $component_name }}
@@ -33,6 +34,5 @@ postgres:
     - "5432"
   ports:
     - "5432:5432"
-  networks:
-    - postgres
+  {{- $networks | indent 2 }}
 {{- end }}

@@ -18,7 +18,14 @@
 # * $1 = file_name
 dockerComposeUp () {
   file_name=$1
-  docker compose -f "./${file_name}" up --build --detach --force-recreate
+  docker \
+  --debug \
+  compose \
+  -f "./${file_name}" \
+  up \
+    --build \
+    --detach \
+    --force-recreate
 }
 
 # Args

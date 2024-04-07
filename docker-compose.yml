@@ -2,88 +2,31 @@
 # Source: docker-compose/templates/main.yaml
 version: "3.8"
 services:
-  postgres:
-    container_name: postgres
-    hostname: postgres
-    image: "postgres:latest"
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: snitzsh_db
-    volumes:
-      - "./volumes/postgres/data:/var/lib/postgresql/data"
-      - "./volumes/postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
-    labels:
-      - "com.docker.compose.service=public"
-      - "com.docker.compose.component-name=postgres"
-      - "com.docker.compose.component-type=db"
-    expose:
-      - "5432"
-    ports:
-      - "5432:5432"
-    networks:
-      - postgres
-  pgadmin4:
-    container_name: pgadmin4
-    hostname: pgadmin4
-    image: "dpage/pgadmin4:latest"
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
-      PGADMIN_DEFAULT_PASSWORD: root
-    volumes:
-      - "./volumes/pgadmin4:/var/lib/pgadmin"
-    labels:
-      - "com.docker.compose.service=public"
-      - "com.docker.compose.component-name=pgadmin4"
-      - "com.docker.compose.component-type=db-ui"
-    expose:
-      - '80'
-    ports:
-      - '5050:80'
-    networks:
-      - postgres
-    depends_on:
-      - postgres
-  redis:
-    container_name: redis
-    hostname: redis
-    image: "redis:latest"
-    restart: always
-    environment:
-      REDIS_USERNAME: root
-    volumes:
-      - "./volumes/redis/data:/data"
-    labels:
-      - "com.docker.compose.service=public"
-      - "com.docker.compose.component-name=redis"
-      - "com.docker.compose.component-type=in-memory-data-storage"
-    expose:
-      - "6379"
-    ports:
-      - "6379:6379"
-    command: redis-server --save 20 1 --loglevel warning --requirepass root
-    networks:
-      - redis
-  redisinsight:
-    container_name: redisinsight
-    hostname: redisinsight
-    image: "redislabs/redisinsight:latest"
-    restart: always
+  apis:
+    container_name: api-rust
+    hostname: api-rust
+    image: "api-rust"
+    restart: "always"
+    build:
+      context: ../../../apis/snitzsh/main-rust
+      dockerfile: "Dockerfile"
+      target: dev-stage
+      args:
+        _WORKDIR: /app
+        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
+        RUST_APP_PLATFORM_CLUSTER_NAME: dev
+        RUST_APP_PLATFORM_CLUSTER_TYPE: local
+        RUST_APP_PLATFORM_HOST: dev
+        RUST_APP_PLATFORM_PORT: "3000"
     environment: {}
     volumes:
-      - "./volumes/redisinsight:/db"
+      - "../../../apis/snitzsh/main-rust:/app"
     labels:
-      - "com.docker.compose.service=public"
-      - "com.docker.compose.component-name=redisinsight"
-      - "com.docker.compose.component-type=in-memory-data-storage-ui"
+      - "com.docker.compose.service=private"
+      - "com.docker.compose.component-name=api-rust"
+      - "com.docker.compose.component-type=apis"
     ports:
-      - 5540:5540
-    networks:
-      - redis
-    depends_on:
-      - redis
+      - '3000:3000'
 volumes:
   apis-fastify:
     driver: local
@@ -99,7 +42,7 @@ volumes:
     driver: local
   redisinsight:
     driver: local
-  website-vue:
+  main-vue:
     driver: local
 networks:
   redis:

@@ -21,12 +21,12 @@ services:
   {{- if .Values.components.apis_rust }}
   {{- include "apisRust" . | nindent 2 }}
   {{- end }}
-  {{- if .Values.components.website_vue }}
-  {{- include "websiteVue" . | nindent 2 }}
+  {{- if .Values.components.main_vue }}
+  {{- include "mainVue" . | nindent 2 }}
   {{- end }}
 {{- if .Values.docker.volumes }}
-{{ include "volumes" . }}
+{{- include "volumes" . }}
 {{- end }}
 {{- if .Values.docker.networks }}
-{{ include "networks" . }}
+{{- include "networks" . }}
 {{- end }}

@@ -5,22 +5,51 @@
 #
 # TODO:
 # - Make sure you throw an error if other component is unsing the same port
+# - use docker secret volume to pass the password.
+# - findout why can't I use `-` , right now I am using `_` as .components[].this_key
 #
-infrastructure_type: monolithic # microservice | monolithic
+
+app: snitzsh
+
+env:
+  cluster_name: dev
+  cluster_type: local
+
+main_rust_env:
+  path: "../../../apis/snitzsh/main-rust"
+  _workdir: /app
+  docker_target: "dev-stage"
+  # TODO:
+  #  - findout if .cargo/config.toml is equivalent to package.json in node
+  #    maybe for rust is not neccesary.
+  target_script: "dev"
+  host: "0.0.0.0"
+  port: "3000" # this will be dynamic handled by helm
+
+main_vue_env:
+  path: "../../../uis/snitzsh/main-vue"
+  _workdir: /app
+  docker_target: "dev-stage"
+  target_script: "dev" # .scripts{} in package.json
+  host: "0.0.0.0"
+  port: "8080" # this will be dynamic handled by helm
+
 components:
   grafana: false
   postgres: true
   pgadmin4: true
-  redis: true
-  redisinsight: true
+  redis: false
+  redisinsight: false
   apis_fastify: false # If microservice it will use `apis` property
   apis_rust: false
-  website_vue: false
+  main_vue: false
 
 docker:
   volumes: true
   networks: true
 
+# TODO:
+# - do we need this???
 # All Microservice API will be dynamically place here... if empty it will
 # do `monolithic` build
 front-end:
@@ -38,6 +67,3 @@ auth:
   email: 'root@snitzsh.com'
   username: 'root'
   password: 'root'
-
-apis:
-  # - api_

@@ -1,5 +1,6 @@
 {{- define "apisFastify" -}}
 {{- $component_name := "apis-fastify" -}}
+{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "postgres" "redis")) -}}
 apis:
   {{- /*
     # build:
@@ -37,10 +38,5 @@ apis:
   ports:
     - '3000:3000'
   command: npm run local
-  depends_on:
-    - postgres
-    - redis
-  links:
-    - postgres
-    - redis
+  {{- $depends_on }}
 {{- end }}

@@ -1,45 +1,42 @@
+{{- /*
+TODO:
+  - build image per RUST_APP_PLATFORM_COMPONENTS
+  - make port dynamic
+*/}}
 {{- define "apisRust" -}}
 {{- $component_name := "api-rust" -}}
+{{- $path := .Values.main_rust_env.path -}}
+{{- $workdir := .Values.main_rust_env._workdir -}}
+{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "postgres" "redis")) -}}
 apis:
-  {{- /*
-    build:
-      context: . # Directory of where the docker file is.
-      dockerfile: Dockerfile # name of the docker file
-      target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
-  */}}
   container_name: {{ $component_name }}
   hostname: {{ $component_name }}
-  image: "{{ $component_name }}:latest"
-  restart: always
-  environment:
-    {{- /*
-      local | dev | qa | prod
-    */}}
-    NODE_ENV: 'local'
-    POSTGRES_DB_HOST: postgres
-    POSTGRES_DB_PORT: 5432
-    POSTGRES_DB_USER: {{ .Values.auth.username }}
-    POSTGRES_DB_PASSWORD: {{ .Values.auth.password }}
-    POSTGRES_DB_NAME: snitch_db
-    REDIS_DB_HOST: cache
-    REDIS_DB_PORT: 6379
-    REDIS_DB_USERNAME: {{.Values.auth.username}}
-    REDIS_DB_PASSWORD: {{.Values.auth.password}}
+  image: "{{ $component_name }}"
+  restart: "always"
+  build:
+    context: {{ $path }}
+    dockerfile: "Dockerfile"
+    target: {{ .Values.main_rust_env.docker_target }}
+    args:
+      _WORKDIR: {{ .Values.main_rust_env._workdir }}
+      RUST_APP_PLATFORM_SCRIPT_TARGET: {{ .Values.main_rust_env.target_script }}
+      RUST_APP_PLATFORM_CLUSTER_NAME: {{ .Values.env.cluster_name }}
+      RUST_APP_PLATFORM_CLUSTER_TYPE: {{ .Values.env.cluster_type }}
+      RUST_APP_PLATFORM_HOST: {{ .Values.main_rust_env.target_script }}
+      RUST_APP_PLATFORM_PORT: "3000"
+  environment: {}
   volumes:
-    - "./volumes/{{ $component_name }}/src:/usr/src/{{ $component_name }}"
+    - "{{ $path }}:{{ $workdir }}"
   labels:
     - "com.docker.compose.service=private"
     - "com.docker.compose.component-name={{ $component_name }}"
     - "com.docker.compose.component-type=apis"
-  expose:
-    - '3000'
   ports:
     - '3000:3000'
+  {{- $depends_on }}
+
+  {{- /*
   command: api-rust
-  depends_on:
-    - postgres
-    - redis
-  links:
-    - postgres
-    - redis
+    TODO: Enabled property if any is enabled
+  */}}
 {{- end }}

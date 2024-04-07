@@ -8,6 +8,7 @@ TODO:
 */}}
 {{- define "redis" -}}
 {{- $component_name := "redis" -}}
+{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "redis") "data_type" "array") -}}
 redis:
   container_name: {{ $component_name }}
   hostname: {{ $component_name }}
@@ -29,6 +30,5 @@ redis:
   ports:
     - "6379:6379"
   command: redis-server --save 20 1 --loglevel warning --requirepass {{ .Values.auth.password }}
-  networks:
-    - redis
+  {{- $networks | indent 2 -}}
 {{- end }}

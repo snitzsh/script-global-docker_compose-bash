@@ -6,6 +6,8 @@ https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisIn
 
 {{- define "redisinsight" -}}
 {{- $component_name := "redisinsight" -}}
+{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "redis")) }}
+{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "redis") "data_type" "array") -}}
 redisinsight:
   container_name: {{ $component_name }}
   hostname: {{ $component_name }}
@@ -20,8 +22,6 @@ redisinsight:
     - "com.docker.compose.component-type=in-memory-data-storage-ui"
   ports:
     - 5540:5540
-  networks:
-    - redis
-  depends_on:
-    - redis
+  {{- $networks | indent 2 }}
+  {{- $depends_on | indent 2 }}
 {{- end }}
