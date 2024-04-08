@@ -1,5 +1,4 @@
-
-#! /bin/bash
+#!/bin/bash
 
 # TODO:
 # - https://itnext.io/upgrading-bash-on-macos-7138bd1066ba
@@ -115,4 +114,4 @@ main () {
 # - pass a flag to clear local volumes. per component or all.
 #     docker-compose rm -s -f <service_name> (this command will not delete local volumes)
 #
-main $1
+main "$1"
