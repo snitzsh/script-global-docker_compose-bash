@@ -3,16 +3,36 @@ TODO:
   - Support multi db per app.
 */}}
 {{- define "postgres" -}}
-{{- $component_name := "postgres" -}}
-{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "postgres") "data_type" "array") -}}
-{{ "postgres" }}:
-  container_name: {{ $component_name }}
-  hostname: {{ $component_name }}
-  image: "{{ $component_name }}:latest"
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $platform := $values.platform -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
+  {{- $component_configs := .component_configs -}}
+  {{- $tag := $component_configs.tag -}}
+  {{- $path := $component_configs.path -}}
+  {{- $workdir := $component_configs._workdir -}}
+
+  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  {{- $networks := include "docker-compose.functions.networks" (
+        dict
+          "global" $values
+          "networks" (list "postgres") "data_type" "array"
+      )
+  -}}
+
+{{ $service_name }}:
+  container_name: {{ $service_name }}
+  hostname: {{ $service_name }}
+  image: "{{ $component_name }}:{{ $tag }}"
   restart: always
   environment:
-    POSTGRES_USER: {{ .Values.auth.username }}
-    POSTGRES_PASSWORD: {{ .Values.auth.password }}
+    POSTGRES_USER: {{ $values.auth.username }}
+    POSTGRES_PASSWORD: {{ $values.auth.password }}
     POSTGRES_DB: snitzsh_db
     {{- /*
       # Additional databases
@@ -24,12 +44,9 @@ TODO:
       DB2_PASSWORD: db2password
     */}}
   volumes:
-    - "./volumes/{{ $component_name }}/data:/var/lib/postgresql/data"
-    - "./volumes/{{ $component_name }}/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
-  labels:
-    - "com.docker.compose.service=public"
-    - "com.docker.compose.component-name={{ $component_name }}"
-    - "com.docker.compose.component-type=db"
+    - "./volumes/{{ $service_name }}/data:/var/lib/postgresql/data"
+    - "./volumes/{{ $service_name }}/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+  {{ $service_labels }}
   expose:
     - "5432"
   ports:

@@ -7,50 +7,78 @@
 # - Make sure you throw an error if other component is unsing the same port
 # - use docker secret volume to pass the password.
 # - findout why can't I use `-` , right now I am using `_` as .components[].this_key
-#
-
+# - create volumes with the new name standard in main.sh, before it builds
+#   the docker-compose.yml
 apps:
   - snitzsh
 
-platform:
-  architecture: arm64 # linux: amd64 | mac m*: arm64
+# TODO:
+# Support multi registries
+registries:
+  - docker
+  - aws
+
+# TODO:
+#   - in boilerplate get the architecture by running this command: `docker version`
+#     look for the Server: OS/Arch
+#   - Do we need this for public images?
+platform: "linux/arm64" # otherlinux: `linux/amd64` | mac m*: `linux/arm64`
 
 env:
   cluster_name: dev
   cluster_type: local
 
-apis-snitzsh-main-rust:
-  path: "../../../"
-  _workdir: /app
-  docker_target: "dev-stage"
-  # TODO:
-  #  - findout if .cargo/config.toml is equivalent to package.json in node
-  #    maybe for rust is not neccesary.
-  target_script: "dev"
-  host: "0.0.0.0"
-  port: "3000" # this will be dynamic handled by helm
-
-uis-snitzsh-main-vue:
-  path: "../../../"
-  _workdir: /app
-  docker_target: "dev-stage"
-  target_script: "dev" # .scripts{} in package.json
-  host: "0.0.0.0"
-  port: "8080" # this will be dynamic handled by helm
-
 components:
   public:
-    grafana: true
-    pgadmin4: false
-    postgres: true
-    redis: false
-    redisinsight: false
+    dbs:
+      postgres:
+        enabled: true
+        tag: latest
+    db-uis:
+      pgadmin4:
+        enabled: true
+        tag: latest
+    cache-dbs:
+      redis:
+        enabled: true
+        tag: latest
+    cache-db-uis:
+      redisinsight:
+        enabled: true
+        tag: latest
   private:
     apis:
-      main-fastify: false # If microservice it will use `apis` property
-      main-rust: true
+      main-fastify:
+        enabled: true
+        path: "../../../"
+        _workdir: /app
+        target: "dev-stage" # dockerfile stage
+        # TODO:
+        #  - findout if .cargo/config.toml is equivalent to package.json in node
+        #    maybe for rust is not neccesary.
+        target_script: "dev"
+        host: "0.0.0.0"
+        port: "3000" # this will be dynamic handled by helm
+      main-rust:
+        enabled: true
+        path: "../../../"
+        _workdir: /app
+        target: "dev-stage" # dockerfile stage
+        # TODO:
+        #  - findout if .cargo/config.toml is equivalent to package.json in node
+        #    maybe for rust is not neccesary.
+        target_script: "dev"
+        host: "0.0.0.0"
+        port: "3000" # this will be dynamic handled by helm
     uis:
-      main-vue: false
+      main-vue:
+        enabled: true
+        path: "../../../"
+        _workdir: /app
+        target: "dev-stage" # dockerfile stage
+        target_script: "dev" # .scripts{} in package.json
+        host: "0.0.0.0"
+        port: "8080" # this will be dynamic handled by helm
 
 docker:
   volumes: true

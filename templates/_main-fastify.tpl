@@ -1,42 +1,44 @@
 {{- define "main-fastify" -}}
-{{- $component_name := "main-fastify" -}}
-{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "postgres" "redis")) -}}
-main-fastify:
-  {{- /*
-    # build:
-    #   context: . # Directory of where the docker file is.
-    #   dockerfile: Dockerfile # name of the docker file
-    #   target: base # look at the Dockerfile for `as local`, that way we can configure dev | qa | prod differently if needed
-  */}}
-  container_name: {{ $component_name }}
-  hostname: {{ $component_name }}
-  image: {{ $component_name }}:latest
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $platform := $values.platform -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
+  {{- $component_configs := .component_configs -}}
+  {{- $path := $component_configs.path -}}
+  {{- $workdir := $component_configs._workdir -}}
+  {{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" $values "depends_on" (list "postgres" "redis")) -}}
+  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+
+{{ $service_name }}:
+  container_name: {{ $service_name }}
+  hostname: {{ $service_name }}
+  image: {{ $service_name }}:latest
   restart: always
-  environment:
-    {{- /*
-      # local | dev | qa | prod
-    */}}
-    NODE_ENV: 'local'
-    POSTGRES_DB_HOST: postgres
-    POSTGRES_DB_PORT: 5432
-    POSTGRES_DB_USER: {{ .Values.auth.username }}
-    POSTGRES_DB_PASSWORD: {{ .Values.auth.password }}
-    POSTGRES_DB_NAME: snitch_db
-    REDIS_DB_HOST: cache
-    REDIS_DB_PORT: 6379
-    REDIS_DB_PASSWORD: {{.Values.auth.password}}
+  platform: {{ $platform }}
+  build:
+    context: "{{ $path }}{{ $folder_name }}"
+    dockerfile: "Dockerfile"
+    target: {{ $component_configs.target }}
+    args:
+      _WORKDIR: {{ $component_configs._workdir }}
+      RUST_APP_PLATFORM_SCRIPT_TARGET: {{ $component_configs.target_script }}
+      RUST_APP_PLATFORM_CLUSTER_NAME: {{ $values.env.cluster_name }}
+      RUST_APP_PLATFORM_CLUSTER_TYPE: {{ $values.env.cluster_type }}
+      RUST_APP_PLATFORM_HOST: {{ $component_configs.host }}
+      RUST_APP_PLATFORM_PORT: "3000"
+  environment: {}
   volumes:
-    - "./volumes/{{ $component_name }}/src:/app/src"
-    - "./volumes/{{ $component_name }}/nodemon.json:/app/nodemon.json"
-    - "./volumes/{{ $component_name }}/server.js:/app/server.js"
-  labels:
-    - "com.docker.compose.service=private"
-    - "com.docker.compose.component-name={{ $component_name }}"
-    - "com.docker.compose.component-type=apis"
-  expose:
-    - '3000'
+    - "{{ $path }}{{ $folder_name }}:{{ $workdir }}"
+  {{ $service_labels }}
   ports:
     - '3000:3000'
+  {{- $depends_on | indent 2 }}
+  {{- /*
   command: npm run local
-  {{- $depends_on }}
+  */}}
 {{- end }}

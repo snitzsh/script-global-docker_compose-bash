@@ -7,28 +7,46 @@ TODO:
   - Support configs volume.
 */}}
 {{- define "redis" -}}
-{{- $component_name := "redis" -}}
-{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "redis") "data_type" "array") -}}
-redis:
-  container_name: {{ $component_name }}
-  hostname: {{ $component_name }}
-  image: "{{ $component_name }}:latest"
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $platform := $values.platform -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
+  {{- $component_configs := .component_configs -}}
+  {{- $tag := $component_configs.tag -}}
+  {{- $path := $component_configs.path -}}
+  {{- $workdir := $component_configs._workdir -}}
+
+  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  {{- $networks := include "docker-compose.functions.networks" (
+        dict
+          "global" $values
+          "networks" (list "redis")
+          "data_type" "array"
+      )
+  -}}
+
+{{ $service_name }}:
+  container_name: {{ $service_name }}
+  hostname: {{ $service_name }}
+  image: "{{ $component_name }}:{{ $tag }}"
   restart: always
   environment:
-    REDIS_USERNAME: {{ .Values.auth.username }}
+    REDIS_USERNAME: {{ $values.auth.username }}
   volumes:
-    - "./volumes/{{ $component_name }}/data:/data"
+    - "./volumes/{{ $service_name }}/data:/data"
     {{- /*
-      - "./configs/{{ $component_name }}/config:/user/local/etc/redis"
+      - "./configs/{{ $service_name }}/config:/user/local/etc/redis"
     */}}
-  labels:
-    - "com.docker.compose.service=public"
-    - "com.docker.compose.component-name={{ $component_name }}"
-    - "com.docker.compose.component-type=in-memory-data-storage"
+  {{ $service_labels }}
   expose:
     - "6379"
   ports:
     - "6379:6379"
-  command: redis-server --save 20 1 --loglevel warning --requirepass {{ .Values.auth.password }}
+  command: "redis-server --save 20 1 --loglevel warning --requirepass {{ $values.auth.password }}"
   {{- $networks | indent 2 -}}
 {{- end }}

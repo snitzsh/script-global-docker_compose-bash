@@ -2,52 +2,54 @@
 TODO:
   - build image per VITE_APP_PLATFORM_COMPONENTS
 */}}
+
 {{- define "main-vue" -}}
-{{- $component_name := "main-vue" -}}
-{{- $path := .Values.main_vue_env.path -}}
-{{- $workdir := .Values.main_vue_env._workdir -}}
-main-vue:
-  container_name: {{ $component_name }}
-  image: "{{ $component_name }}"
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $platform := $values.platform -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
+  {{- $component_configs := .component_configs -}}
+  {{- $path := $component_configs.path -}}
+  {{- $workdir := $component_configs._workdir -}}
+  {{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" $values "depends_on" (list "postgres" "redis")) -}}
+  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+
+{{ $service_name }}:
+  container_name: {{ $service_name }}
+  image: "{{ $service_name }}:latest"
   restart: "always"
   stdin_open: true
   tty: true
+  platform: {{ $platform }}
   build:
-    context: {{ $path }}
+    context: "{{ $path }}{{ $folder_name }}"
     dockerfile: "Dockerfile"
-    target: {{ .Values.main_vue_env.docker_target }}
+    target: {{ $component_configs.target }}
     args:
-      _WORKDIR: {{ .Values.main_vue_env._workdir }}
-      VITE_APP_PLATFORM_SCRIPT_TARGET: {{ .Values.main_vue_env.target_script }}
-      VITE_APP_PLATFORM_CLUSTER_NAME: {{ .Values.env.cluster_name }}
-      VITE_APP_PLATFORM_CLUSTER_TYPE: {{ .Values.env.cluster_type }}
-      VITE_APP_PLATFORM_HOST: {{ .Values.main_vue_env.target_script }}
-      {{- /* TODO: make port dynamic */}}
+      _WORKDIR: {{ $component_configs._workdir }}
+      VITE_APP_PLATFORM_SCRIPT_TARGET: {{ $component_configs.target_script }}
+      VITE_APP_PLATFORM_CLUSTER_NAME: {{ $values.env.cluster_name }}
+      VITE_APP_PLATFORM_CLUSTER_TYPE: {{ $values.env.cluster_type }}
+      VITE_APP_PLATFORM_HOST: {{ $component_configs.host }}
       VITE_APP_PLATFORM_PORT: "8080"
   environment: {}
   {{- /*
     environment:
-      - HOST=0.0.0.0:3000
       - CHOKIDAR_USEPOLLING=true
   */}}
   volumes:
-    {{- /*
-      - "./volumes/{{ $component_name }}/:/app"
-      # Volumes below only works for target: dev
-    - "./volumes/{{ $component_name }}/src:/app/src"
-    - "./volumes/{{ $component_name }}/package.json:/app/package.json"
-    */}}
-    - "{{ $path }}/src:{{ $workdir }}/src"
-  labels:
-    - "com.docker.compose.service=private"
-    - "com.docker.compose.component-name={{ $component_name }}"
-    - "com.docker.compose.component-type=ui"
+    - "{{ $path }}{{ $folder_name }}/src:{{ $workdir }}/src"
+  {{ $service_labels }}
   ports:
     - "8080:8080"
   {{- /*
-  # expose:
-  #   - "8080"
-    -- --public 0.0.0.0:8080
-  # command: npm run serve
+    expose:
+      - "8080"
+    command: npm run serve
   */}}
 {{- end }}

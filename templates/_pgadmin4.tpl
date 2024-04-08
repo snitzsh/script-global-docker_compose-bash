@@ -1,21 +1,43 @@
 {{- define "pgadmin4" -}}
-{{- $component_name := "pgadmin4" -}}
-{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "postgres")) -}}
-{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "postgres") "data_type" "array") -}}
-pgadmin4:
-  container_name: {{ $component_name }}
-  hostname: {{ $component_name }}
-  image: "dpage/{{ $component_name }}:latest"
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $platform := $values.platform -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
+  {{- $component_configs := .component_configs -}}
+  {{- $tag := $component_configs.tag -}}
+  {{- $path := $component_configs.path -}}
+  {{- $workdir := $component_configs._workdir -}}
+
+  {{- $depends_on := include "docker-compose.functions.depends_on" (
+        dict
+          "global" $values
+          "depends_on" (list "postgres")
+      )
+  -}}
+  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  {{- $networks := include "docker-compose.functions.networks" (
+        dict
+          "global" $values
+          "networks" (list "postgres")
+          "data_type" "array"
+      )
+  -}}
+{{ $service_name }}:
+  container_name: {{ $service_name }}
+  hostname: {{ $service_name }}
+  image: "dpage/{{ $component_name }}:{{ $tag }}"
   restart: always
   environment:
-    PGADMIN_DEFAULT_EMAIL: {{ .Values.auth.email }}
-    PGADMIN_DEFAULT_PASSWORD: {{ .Values.auth.password }}
+    PGADMIN_DEFAULT_EMAIL: {{ $values.auth.email }}
+    PGADMIN_DEFAULT_PASSWORD: {{ $values.auth.password }}
   volumes:
-    - "./volumes/{{ $component_name }}:/var/lib/pgadmin"
-  labels:
-    - "com.docker.compose.service=public"
-    - "com.docker.compose.component-name={{ $component_name }}"
-    - "com.docker.compose.component-type=db-ui"
+    - "./volumes/{{ $service_name }}:/var/lib/pgadmin"
+  {{ $service_labels }}
   expose:
     - '80'
   ports:

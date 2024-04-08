@@ -2,50 +2,59 @@
 # Source: docker-compose/templates/main.yaml
 version: "3.8"
 services:
-  apis:
-    container_name: api-rust
-    hostname: api-rust
-    image: "api-rust"
+  uis-snitzsh-main-vue:
+    container_name: uis-snitzsh-main-vue
+    image: "uis-snitzsh-main-vue:latest"
     restart: "always"
+    stdin_open: true
+    tty: true
+    platform: "linux/arm64"
     build:
-      context: ../../../apis/snitzsh/main-rust
+      context: "../../../uis/snitzsh/main-vue"
       dockerfile: "Dockerfile"
       target: dev-stage
       args:
         _WORKDIR: /app
-        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
-        RUST_APP_PLATFORM_CLUSTER_NAME: dev
-        RUST_APP_PLATFORM_CLUSTER_TYPE: local
-        RUST_APP_PLATFORM_HOST: dev
-        RUST_APP_PLATFORM_PORT: "3000"
+        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
+        VITE_APP_PLATFORM_CLUSTER_NAME: dev
+        VITE_APP_PLATFORM_CLUSTER_TYPE: local
+        VITE_APP_PLATFORM_HOST: 0.0.0.0
+        VITE_APP_PLATFORM_PORT: "8080"
     environment: {}
     volumes:
-      - "../../../apis/snitzsh/main-rust:/app"
+      - "../../../uis/snitzsh/main-vue/src:/app/src"
     labels:
-      - "com.docker.compose.service=private"
-      - "com.docker.compose.component-name=api-rust"
-      - "com.docker.compose.component-type=apis"
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-type=uis
+    - com.docker.compose.service-name=uis-snitzsh-main-vue
+    - com.docker.compose.architecture=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
     ports:
-      - '3000:3000'
+      - "8080:8080"
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: "postgres:latest"
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: snitzsh_db
+    volumes:
+      - "./volumes/postgres/data:/var/lib/postgresql/data"
+      - "./volumes/postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+    labels:
+      - "com.docker.compose.service=public"
+      - "com.docker.compose.component-name=postgres"
+      - "com.docker.compose.component-type=db"
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"  
 volumes:
-  apis-fastify:
+  private:
     driver: local
-  apis-rust:
+  public:
     driver: local
-  grafana:
-    driver: local
-  pgadmin4:
-    driver: local
-  postgres:
-    driver: local
-  redis:
-    driver: local
-  redisinsight:
-    driver: local
-  main-vue:
-    driver: local
-networks:
-  redis:
-    driver: bridge
-  postgres:
-    driver: bridge

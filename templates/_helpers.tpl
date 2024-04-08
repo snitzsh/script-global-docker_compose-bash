@@ -6,13 +6,13 @@ NOTE:
   - null
 
 DESCRIPTION:
-  - Creates a `networks` for a component.
+  - Creates services
 
 ARGS:
-  - $global = .Values
+  - .
 
 RETURN:
-  - `{volumes: {component-name: driver: <[name]> }}` or `Null`
+  - `yaml`
 */}}
 {{- define "docker-compose.functions.services" -}}
   {{- $apps := .Values.apps -}}
@@ -21,19 +21,22 @@ RETURN:
   {{- $private := $components.private -}}
   {{- range $apps }}
     {{- $app_name := . -}}
+    {{- /* loops: public, private */}}
     {{- range $software_type, $software_type_components := $components }}
-      {{- range $key, $value := $software_type_components }}
-        {{- if eq $software_type "public" }}
-          {{- if $value }}
-            {{- include $key $ | nindent 2 }}
-          {{- end }}
-        {{- /* private */}}
-        {{- else }}
-          {{- /* loops: apis, uis */}}
-          {{- range $private_key, $private_value := $value }}
-            {{- if $private_value }}
-              {{- include $private_key (dict "globals" $ "app_name" $app_name "software_type" $software_type "component_type" $key "component_name" $private_key ) | nindent 2 }}
-            {{- end }}
+      {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
+      {{- range $component_type, $component_type_obj := $software_type_components }}
+        {{- range $component_name, $component_configs := $component_type_obj }}
+          {{- if $component_configs.enabled }}
+            {{- include $component_name (
+                  dict
+                    "globals" $
+                    "app_name" $app_name
+                    "software_type" $software_type
+                    "component_type" $component_type
+                    "component_name" $component_name
+                    "component_configs" $component_configs
+                ) | nindent 2
+            }}
           {{- end }}
         {{- end }}
       {{- end }}
@@ -67,9 +70,19 @@ RETURN:
 
   {{- if gt (len $depends_on) 0 }}
     {{- range $item := $depends_on }}
-      {{- range $key, $value := $components }}
-        {{- if and ($value) (eq $item $key) }}
-        {{- $obj = merge $obj (dict "depends_on" (append $obj.depends_on $key)) }}
+      {{- /* loops: public, private */}}
+      {{- range $software_type, $software_type_components := $components }}
+        {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
+        {{- range $component_type, $component_type_obj := $software_type_components }}
+          {{- range $component_name, $component_configs := $component_type_obj }}
+            {{- if and ($component_configs.enabled) (eq $item $component_name) }}
+              {{- $obj = merge $obj (
+                    dict
+                      "depends_on" (append $obj.depends_on $component_name)
+                  )
+              -}}
+            {{- end }}
+          {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -104,12 +117,20 @@ RETURN:
   {{- $global := .global }}
   {{- $components := $global.components }}
   {{- $volumes := dict "volumes" (dict) }}
-  {{- range $key, $value := $components }}
-    {{- if $value }}
-      {{- $volume :=  dict $key (dict "driver" "local") }}
-      {{- $volumes = merge $volumes (dict "volumes" $volume) }}
+
+  {{- /* loops: public, private */}}
+  {{- range $software_type, $software_type_components := $components }}
+    {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
+    {{- range $component_type, $component_type_obj := $software_type_components }}
+      {{- range $component_name, $component_configs := $component_type_obj }}
+        {{- if $component_configs.enabled }}
+          {{- $volume :=  dict $component_name (dict "driver" "local") }}
+          {{- $volumes = merge $volumes (dict "volumes" $volume) }}
+        {{- end }}
+      {{- end }}
     {{- end }}
   {{- end }}
+
   {{- if gt (len (keys $volumes.volumes)) 0 }}
 {{ $volumes | toYaml }}
   {{- end }}
@@ -140,10 +161,16 @@ RETURN:
 
   {{- if gt (len $networks) 0 }}
     {{- range $item := $networks }}
-      {{- range $key, $value := $components }}
-        {{- if and ($value) (eq $item $key) }}
-          {{- $network :=  dict $key (dict "driver" "bridge") }}
-          {{- $obj = merge $obj (dict "networks" $network) }}
+      {{- /* loops: public, private */}}
+      {{- range $software_type, $software_type_components := $components }}
+        {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
+        {{- range $component_type, $component_type_obj := $software_type_components }}
+          {{- range $component_name, $component_configs := $component_type_obj }}
+            {{- if and ($component_configs.enabled) (eq $item $component_name) }}
+              {{- $network :=  dict $component_name (dict "driver" "bridge") }}
+              {{- $obj = merge $obj (dict "networks" $network) }}
+            {{- end }}
+          {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -158,4 +185,50 @@ RETURN:
 {{ $obj | toYaml }}
     {{- end }}
   {{- end }}
+{{- end }}
+
+{{- /*
+TODO:
+  - null
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Creates labels for private and public components
+
+ARGS:
+  - .
+
+RETURN:
+  - `yaml`
+*/}}
+{{- define "docker-compose.functions.service-labels" -}}
+  {{- $globals := .globals  -}}
+  {{- $app_name := .app_name  -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $image_env := index $values $service_name -}}
+  {{- $platform := $values.platform -}}
+  {{- $domain := "com.docker.compose" -}}
+  {{- $labels := list
+        (printf "%s.app-name=%s" $domain $app_name)
+        (printf "%s.software-type=%s" $domain $software_type)
+        (printf "%s.component-type=%s" $domain $component_type)
+        (printf "%s.service-name=%s" $domain $service_name)
+        (printf "%s.platform=%s" $domain $platform)
+  -}}
+  {{- if eq $software_type "private" -}}
+    {{- $private_labels := list
+          (printf "%s.docker-stage=%s" $domain $image_env.target)
+          (printf "%s.target-script=%s" $domain $image_env.target_script)
+    -}}
+    {{- $labels = concat $labels $private_labels -}}
+  {{- end -}}
+
+labels:
+  {{- $labels | toYaml | nindent 2 }}
 {{- end }}

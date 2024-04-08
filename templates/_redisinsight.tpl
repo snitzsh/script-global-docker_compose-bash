@@ -5,21 +5,44 @@ https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisIn
 */}}
 
 {{- define "redisinsight" -}}
-{{- $component_name := "redisinsight" -}}
-{{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" .Values "depends_on" (list "redis")) }}
-{{- $networks := include "docker-compose.functions.networks" (dict "global" .Values "networks" (list "redis") "data_type" "array") -}}
-redisinsight:
-  container_name: {{ $component_name }}
-  hostname: {{ $component_name }}
-  image: "redislabs/{{ $component_name }}:latest"
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
+  {{- $software_type := .software_type -}}
+  {{- $component_type := .component_type -}}
+  {{- $component_name := .component_name -}}
+  {{- $values := $globals.Values -}}
+  {{- $platform := $values.platform -}}
+  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
+  {{- $component_configs := .component_configs -}}
+  {{- $tag := $component_configs.tag -}}
+  {{- $path := $component_configs.path -}}
+  {{- $workdir := $component_configs._workdir -}}
+
+  {{- $depends_on := include "docker-compose.functions.depends_on" (
+        dict
+          "global" $values
+          "depends_on" (list "redis")
+      )
+  -}}
+  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  {{- $networks := include "docker-compose.functions.networks" (
+        dict
+          "global" $values
+          "networks" (list "redis")
+          "data_type" "array"
+      )
+  -}}
+
+{{ $service_name }}:
+  container_name: {{ $service_name }}
+  hostname: {{ $service_name }}
+  image: "redislabs/{{ $component_name }}:{{ $tag }}"
   restart: always
   environment: {}
   volumes:
-    - "./volumes/{{ $component_name }}:/db"
-  labels:
-    - "com.docker.compose.service=public"
-    - "com.docker.compose.component-name={{ $component_name }}"
-    - "com.docker.compose.component-type=in-memory-data-storage-ui"
+    - "./volumes/{{ $service_name }}:/db"
+  {{ $service_labels }}
   ports:
     - 5540:5540
   {{- $networks | indent 2 }}
