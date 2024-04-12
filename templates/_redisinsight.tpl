@@ -30,7 +30,6 @@ https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisIn
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values
-          "app_name" $app_name
           "networks" (list "redis")
           "data_type" "array"
       )

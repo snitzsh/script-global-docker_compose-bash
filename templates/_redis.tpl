@@ -25,7 +25,6 @@ TODO:
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values
-          "app_name" $app_name
           "networks" (list "redis")
           "data_type" "array"
       )

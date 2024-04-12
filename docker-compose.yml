@@ -19,9 +19,9 @@ services:
     ports:
       - 5540:5540  
     networks:
-    - redis  
+    - cache-dbs-snitzsh-redis  
     depends_on:
-    - redis
+    - cache-dbs-snitzsh-redis
   cache-dbs-snitzsh-redis:
     container_name: cache-dbs-snitzsh-redis
     hostname: cache-dbs-snitzsh-redis
@@ -43,7 +43,7 @@ services:
       - "6379:6379"
     command: "redis-server --save 20 1 --loglevel warning --requirepass root"  
     networks:
-    - redis
+    - cache-dbs-snitzsh-redis
   db-uis-snitzsh-pgadmin4:
     container_name: db-uis-snitzsh-pgadmin4
     hostname: db-uis-snitzsh-pgadmin4
@@ -65,9 +65,9 @@ services:
     ports:
       - '5050:80'  
     networks:
-    - postgres  
+    - dbs-snitzsh-postgres  
     depends_on:
-    - postgres
+    - dbs-snitzsh-postgres
   dbs-snitzsh-postgres:
     container_name: dbs-snitzsh-postgres
     hostname: dbs-snitzsh-postgres
@@ -91,18 +91,18 @@ services:
     ports:
       - "5432:5432"  
     networks:
-    - postgres
+    - dbs-snitzsh-postgres
 volumes:
-  pgadmin4:
+  cache-db-uis-snitzsh-redisinsight:
     driver: local
-  postgres:
+  cache-dbs-snitzsh-redis:
     driver: local
-  redis:
+  db-uis-snitzsh-pgadmin4:
     driver: local
-  redisinsight:
+  dbs-snitzsh-postgres:
     driver: local
 networks:
-  postgres:
+  cache-dbs-%!s(<nil>)-redis:
     driver: bridge
-  redis:
+  dbs-%!s(<nil>)-postgres:
     driver: bridge

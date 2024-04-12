@@ -158,22 +158,25 @@ RETURN:
 */}}
 {{- define "docker-compose.functions.networks" -}}
   {{- $global := .global -}}
+  {{- $apps := $global.apps -}}
   {{- $components := $global.components -}}
-  {{- $app_name := .app_name -}}
   {{- $networks := .networks -}}
   {{- $data_type := .data_type -}}
   {{- $obj := dict "networks" (dict) -}}
 
   {{- if gt (len $networks) 0 }}
-    {{- range $item := $networks }}
-      {{- /* loops: public, private */}}
-      {{- range $software_type, $software_type_components := $components }}
-        {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
-        {{- range $component_type, $component_type_obj := $software_type_components }}
-          {{- range $component_name, $component_configs := $component_type_obj }}
-            {{- if and ($component_configs.enabled) (eq $item $component_name) }}
-              {{- $network :=  dict (printf "%s-%s-%s" $component_type $app_name $component_name) (dict "driver" "bridge") }}
-              {{- $obj = merge $obj (dict "networks" $network) }}
+    {{- range $apps }}
+      {{- $app_name := . -}}
+      {{- range $item := $networks }}
+        {{- /* loops: public, private */}}
+        {{- range $software_type, $software_type_components := $components }}
+          {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
+          {{- range $component_type, $component_type_obj := $software_type_components }}
+            {{- range $component_name, $component_configs := $component_type_obj }}
+              {{- if and ($component_configs.enabled) (eq $item $component_name) }}
+                {{- $network :=  dict (printf "%s-%s-%s" $component_type $app_name $component_name) (dict "driver" "bridge") }}
+                {{- $obj = merge $obj (dict "networks" $network) }}
+              {{- end }}
             {{- end }}
           {{- end }}
         {{- end }}
