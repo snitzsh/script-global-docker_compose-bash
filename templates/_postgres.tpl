@@ -21,6 +21,7 @@ TODO:
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values
+          "app_name" $app_name
           "networks" (list "postgres") "data_type" "array"
       )
   -}}

@@ -63,10 +63,11 @@ RETURN:
   - `{ depends_on: [ ..., component_1, component_2, ... ] }` or `Null`
 */}}
 {{- define "docker-compose.functions.depends_on" -}}
-  {{- $global := .global }}
-  {{- $components := $global.components }}
-  {{- $depends_on := .depends_on }}
-  {{- $obj := dict "depends_on" (list) }}
+  {{- $global := .global -}}
+  {{- $components := $global.components -}}
+  {{- $app_name := .app_name -}}
+  {{- $depends_on := .depends_on -}}
+  {{- $obj := dict "depends_on" (list) -}}
 
   {{- if gt (len $depends_on) 0 }}
     {{- range $item := $depends_on }}
@@ -78,7 +79,7 @@ RETURN:
             {{- if and ($component_configs.enabled) (eq $item $component_name) }}
               {{- $obj = merge $obj (
                     dict
-                      "depends_on" (append $obj.depends_on $component_name)
+                      "depends_on" (append $obj.depends_on (printf "%s-%s-%s" $component_type $app_name $component_name))
                   )
               -}}
             {{- end }}
@@ -114,18 +115,21 @@ RETURN:
   - `{volumes: {component-name: driver: <[name]> }}` or `Null`
 */}}
 {{- define "docker-compose.functions.volumes" -}}
-  {{- $global := .global }}
-  {{- $components := $global.components }}
-  {{- $volumes := dict "volumes" (dict) }}
-
-  {{- /* loops: public, private */}}
-  {{- range $software_type, $software_type_components := $components }}
-    {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
-    {{- range $component_type, $component_type_obj := $software_type_components }}
-      {{- range $component_name, $component_configs := $component_type_obj }}
-        {{- if $component_configs.enabled }}
-          {{- $volume :=  dict $component_name (dict "driver" "local") }}
-          {{- $volumes = merge $volumes (dict "volumes" $volume) }}
+  {{- $global := .global -}}
+  {{- $components := $global.components -}}
+  {{- $apps := $global.apps -}}
+  {{- $volumes := dict "volumes" (dict) -}}
+  {{- range $apps }}
+    {{- $app_name := . -}}
+    {{- /* loops: public, private */}}
+    {{- range $software_type, $software_type_components := $components }}
+      {{- /* loops: dbs, db-uis, apis, uis, etc. */}}
+      {{- range $component_type, $component_type_obj := $software_type_components }}
+        {{- range $component_name, $component_configs := $component_type_obj }}
+          {{- if $component_configs.enabled }}
+            {{- $volume :=  dict (printf "%s-%s-%s" $component_type $app_name $component_name) (dict "driver" "local") }}
+            {{- $volumes = merge $volumes (dict "volumes" $volume) }}
+          {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -153,11 +157,12 @@ RETURN:
   - `{volumes: {component-name: driver: <[name]> }}` or `Null`
 */}}
 {{- define "docker-compose.functions.networks" -}}
-  {{- $global := .global }}
-  {{- $components := $global.components }}
-  {{- $networks := .networks }}
-  {{- $data_type := .data_type }}
-  {{- $obj := dict "networks" (dict) }}
+  {{- $global := .global -}}
+  {{- $components := $global.components -}}
+  {{- $app_name := .app_name -}}
+  {{- $networks := .networks -}}
+  {{- $data_type := .data_type -}}
+  {{- $obj := dict "networks" (dict) -}}
 
   {{- if gt (len $networks) 0 }}
     {{- range $item := $networks }}
@@ -167,7 +172,7 @@ RETURN:
         {{- range $component_type, $component_type_obj := $software_type_components }}
           {{- range $component_name, $component_configs := $component_type_obj }}
             {{- if and ($component_configs.enabled) (eq $item $component_name) }}
-              {{- $network :=  dict $component_name (dict "driver" "bridge") }}
+              {{- $network :=  dict (printf "%s-%s-%s" $component_type $app_name $component_name) (dict "driver" "bridge") }}
               {{- $obj = merge $obj (dict "networks" $network) }}
             {{- end }}
           {{- end }}
@@ -204,8 +209,8 @@ RETURN:
   - `yaml`
 */}}
 {{- define "docker-compose.functions.service-labels" -}}
-  {{- $globals := .globals  -}}
-  {{- $app_name := .app_name  -}}
+  {{- $globals := .globals -}}
+  {{- $app_name := .app_name -}}
   {{- $software_type := .software_type -}}
   {{- $component_type := .component_type -}}
   {{- $component_name := .component_name -}}

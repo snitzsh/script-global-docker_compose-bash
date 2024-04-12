@@ -9,6 +9,9 @@
 # - findout why can't I use `-` , right now I am using `_` as .components[].this_key
 # - create volumes with the new name standard in main.sh, before it builds
 #   the docker-compose.yml
+# - for private images handle the tags dinamically on build only and run locally
+# - For private image handle local/
+#
 apps:
   - snitzsh
 
@@ -49,7 +52,7 @@ components:
   private:
     apis:
       main-fastify:
-        enabled: true
+        enabled: false
         path: "../../../"
         _workdir: /app
         target: "dev-stage" # dockerfile stage
@@ -60,7 +63,7 @@ components:
         host: "0.0.0.0"
         port: "3000" # this will be dynamic handled by helm
       main-rust:
-        enabled: true
+        enabled: false
         path: "../../../"
         _workdir: /app
         target: "dev-stage" # dockerfile stage
@@ -72,7 +75,7 @@ components:
         port: "3000" # this will be dynamic handled by helm
     uis:
       main-vue:
-        enabled: true
+        enabled: false
         path: "../../../"
         _workdir: /app
         target: "dev-stage" # dockerfile stage

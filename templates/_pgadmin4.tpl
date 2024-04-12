@@ -16,6 +16,7 @@
   {{- $depends_on := include "docker-compose.functions.depends_on" (
         dict
           "global" $values
+          "app_name" $app_name
           "depends_on" (list "postgres")
       )
   -}}
@@ -23,6 +24,7 @@
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values
+          "app_name" $app_name
           "networks" (list "postgres")
           "data_type" "array"
       )
