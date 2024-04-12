@@ -1,8 +1,12 @@
 {{- $components := .Values.components -}}
 {{- $docker := .Values.docker -}}
-{{- $posgres_name := "postgres" -}}
-
-version: "3.8"
+{{- /*
+TODO:
+  - Maybe is better do loop her so we can make the multiple docker compose?
+    Does docker compose support multiple docker compose? if not we may need
+    bash.
+*/}}
+name: snitzsh
 services:
   {{- include "docker-compose.functions.services" . }}
 {{- if $docker.volumes }}

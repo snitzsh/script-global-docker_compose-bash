@@ -1,6 +1,6 @@
 ---
 # Source: docker-compose/templates/main.yaml
-version: "3.8"
+name: snitzsh
 services:
   cache-db-uis-snitzsh-redisinsight:
     container_name: cache-db-uis-snitzsh-redisinsight
@@ -102,7 +102,7 @@ volumes:
   dbs-snitzsh-postgres:
     driver: local
 networks:
-  cache-dbs-%!s(<nil>)-redis:
+  cache-dbs-snitzsh-redis:
     driver: bridge
-  dbs-%!s(<nil>)-postgres:
+  dbs-snitzsh-postgres:
     driver: bridge
