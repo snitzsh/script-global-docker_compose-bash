@@ -1,17 +1,3 @@
-{{- $components := .Values.components -}}
 {{- $docker := .Values.docker -}}
-{{- /*
-TODO:
-  - Maybe is better do loop her so we can make the multiple docker compose?
-    Does docker compose support multiple docker compose? if not we may need
-    bash.
-*/}}
-name: snitzsh
-services:
-  {{- include "docker-compose.functions.services" . }}
-{{- if $docker.volumes }}
-{{- include "volumes" . }}
-{{- end }}
-{{- if $docker.networks }}
-{{- include "networks" . }}
-{{- end }}
+
+{{- include "docker-compose.functions.services" . }}

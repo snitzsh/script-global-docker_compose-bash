@@ -2,23 +2,46 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# NOTE:
+#  - .private images assumes that exist in for snitzsh
+#    how ever if you set .apps to `xxx`, the folders must
+#    exits in git and folder structure.
+
 #
 # TODO:
-# - Make sure you throw an error if other component is unsing the same port
-# - use docker secret volume to pass the password.
-# - findout why can't I use `-` , right now I am using `_` as .components[].this_key
-# - create volumes with the new name standard in main.sh, before it builds
-#   the docker-compose.yml
-# - for private images handle the tags dinamically on build only and run locally
-# - For private image handle local/
+#   - Make sure you throw an error if other component is unsing the same port
+#   - use docker secret volume to pass the password.
+#   - findout why can't I use `-` , right now I am using `_` as
+#     .components[].this_key
+#   - create volumes with the new name standard in main.sh, before it builds
+#     the docker-compose.yml
+#   - for private images handle the tags dinamically on build only and run
+#     locally
+#   - For private image handle local/
 #
 apps:
   - snitzsh
+  - test
+
+user: "" # user that executed this scripts: gitlab pipeline
+
+domain: "com.docker.compose"
+
+#
+# TODO:
+#   - fully support this prop.
+# NOTE:
+#   - if `true`, it creates documents in docker-compose.yaml
+#
+merge_apps: true
+# if `merge_apps: true`, it will use this name for the apps. in docker desktop
+default_app_name: platform
 
 # TODO:
 # Support multi registries
 registries:
-  - docker
+  - docker # local (desktop) or remote (based on cluster_type)
+  - harbor
   - aws
 
 # TODO:
@@ -27,73 +50,104 @@ registries:
 #   - Do we need this for public images?
 platform: "linux/arm64" # otherlinux: `linux/amd64` | mac m*: `linux/arm64`
 
+#
+#  TODO:
+#   - make sure the Dockerfile will set label to document how to use
+#       CLUSTER_NAME, CLUSTER_TYPE.
+#     This are only for local testing. When building the image for a real cluster
+#     `labels` shouldn't be attach to the image.
+#
 env:
   cluster_name: dev
   cluster_type: local
 
 components:
   public:
-    dbs:
-      postgres:
-        enabled: true
-        tag: latest
-    db-uis:
-      pgadmin4:
-        enabled: true
-        tag: latest
-    cache-dbs:
-      redis:
-        enabled: true
-        tag: latest
-    cache-db-uis:
-      redisinsight:
-        enabled: true
-        tag: latest
+    snitzsh:
+      dbs:
+        postgres:
+          enabled: false
+          tag: latest
+      db-uis:
+        pgadmin4:
+          enabled: false
+          tag: latest
+      cache-dbs:
+        redis:
+          enabled: false
+          tag: latest
+      cache-db-uis:
+        redisinsight:
+          enabled: false
+          tag: latest
+    test:
+      dbs:
+        postgres:
+          enabled: false
+          tag: latest
+      db-uis:
+        pgadmin4:
+          enabled: false
+          tag: latest
+
+  # TODO:
+  # - we may need to specify the app, becauce if we change the name form
+  #   `snitzsh` to `xxx`, this will failed.
+  #   - example:
+  #     apis.snitzsh
+  #           .main-fastify
+  #         .uavs
+  #           .xxxx
+  #
   private:
-    apis:
-      main-fastify:
-        enabled: false
-        path: "../../../"
-        _workdir: /app
-        target: "dev-stage" # dockerfile stage
-        # TODO:
-        #  - findout if .cargo/config.toml is equivalent to package.json in node
-        #    maybe for rust is not neccesary.
-        target_script: "dev"
-        host: "0.0.0.0"
-        port: "3000" # this will be dynamic handled by helm
-      main-rust:
-        enabled: false
-        path: "../../../"
-        _workdir: /app
-        target: "dev-stage" # dockerfile stage
-        # TODO:
-        #  - findout if .cargo/config.toml is equivalent to package.json in node
-        #    maybe for rust is not neccesary.
-        target_script: "dev"
-        host: "0.0.0.0"
-        port: "3000" # this will be dynamic handled by helm
-    uis:
-      main-vue:
-        enabled: false
-        path: "../../../"
-        _workdir: /app
-        target: "dev-stage" # dockerfile stage
-        target_script: "dev" # .scripts{} in package.json
-        host: "0.0.0.0"
-        port: "8080" # this will be dynamic handled by helm
+    snitzsh:
+      apis:
+        main-fastify:
+          enabled: false
+          path: "../../../"
+          _workdir: /app
+          target: "dev-stage" # dockerfile stage
+          # TODO:
+          #  - findout if .cargo/config.toml is equivalent to package.json in node
+          #    maybe for rust is not neccesary.
+          target_script: "dev"
+          host: "0.0.0.0"
+          port: "3000" # this will be dynamic handled by helm
+        main-rust:
+          enabled: true
+          path: "../../../"
+          _workdir: /app
+          target: "dev-stage" # dockerfile stage
+          # TODO:
+          #  - findout if .cargo/config.toml is equivalent to package.json in node
+          #    maybe for rust is not neccesary.
+          target_script: "dev"
+          host: "0.0.0.0"
+          port: "3000" # this will be dynamic handled by helm
+      uis:
+        main-vue:
+          enabled: true
+          path: "../../../"
+          _workdir: /app
+          target: "dev-stage" # dockerfile stage
+          target_script: "dev" # .scripts{} in package.json
+          host: "0.0.0.0"
+          port: "8080" # this will be dynamic handled by helm
+    test:
+      uis:
+        main-vue:
+          enabled: false
+          path: "../../../"
+          _workdir: /app
+          target: "dev-stage" # dockerfile stage
+          target_script: "dev" # .scripts{} in package.json
+          host: "0.0.0.0"
+          port: "8080" # this will be dynamic handled by helm
+
 
 docker:
   volumes: true
   networks: true
-
-# TODO:
-# - do we need this???
-# All Microservice API will be dynamically place here... if empty it will
-# do `monolithic` build
-front-end:
-  customer-facing: true
-  admin-portal: true
 
 #
 # IMPORTANT:

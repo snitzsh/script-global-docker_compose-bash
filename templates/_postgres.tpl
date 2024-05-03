@@ -12,10 +12,10 @@ TODO:
   {{- $platform := $values.platform -}}
   {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
   {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
-  {{- $component_configs := .component_configs -}}
-  {{- $tag := $component_configs.tag -}}
-  {{- $path := $component_configs.path -}}
-  {{- $workdir := $component_configs._workdir -}}
+  {{- $image_configs := .image_configs -}}
+  {{- $tag := $image_configs.tag -}}
+  {{- $path := $image_configs.path -}}
+  {{- $workdir := $image_configs._workdir -}}
 
   {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
   {{- $networks := include "docker-compose.functions.networks" (
