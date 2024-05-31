@@ -1,35 +1,47 @@
 {{- /*
 TODO:
-  - Support multi db per app.
+  - Support multi db per app (same image or different image)
+  - make port dynamic
+  - Support configs volume.
 */}}
 {{- define "postgres" -}}
+  {{- /* args */}}
   {{- $globals := .globals -}}
-  {{- $app_name := .app_name -}}
   {{- $software_type := .software_type -}}
-  {{- $component_type := .component_type -}}
   {{- $component_name := .component_name -}}
+  {{- $app_name := .app_name -}}
+  {{- $project_name := .project_name -}}
+  {{- $project_obj := .project_obj -}}
+  {{- /* globals */}}
   {{- $values := $globals.Values -}}
+  {{- $image_only := $values.image_only -}}
   {{- $platform := $values.platform -}}
-  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
-  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
-  {{- $image_configs := .image_configs -}}
-  {{- $tag := $image_configs.tag -}}
-  {{- $path := $image_configs.path -}}
-  {{- $workdir := $image_configs._workdir -}}
-
+  {{- /* image configs */}}
+  {{- $path := $project_obj.path -}}
+  {{- $workdir := $project_obj._workdir -}}
+  {{- $tag := $project_obj.tag -}}
+  {{- /* local variables */}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name -}}
+  {{- /* imported modules */}}
   {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values
-          "networks" (list "postgres") "data_type" "array"
+          "networks" (list "postgres")
+          "data_type" "array"
       )
   -}}
 
 {{ $service_name }}:
+  image: "{{ $component_name }}:{{ $tag }}"
+  platform: {{ $platform }}
+  {{- if not $image_only }}
   container_name: {{ $service_name }}
   hostname: {{ $service_name }}
-  image: "{{ $component_name }}:{{ $tag }}"
   restart: always
+  stdin_open: true
+  tty: true
   environment:
     POSTGRES_USER: {{ $values.auth.username }}
     POSTGRES_PASSWORD: {{ $values.auth.password }}
@@ -52,4 +64,5 @@ TODO:
   ports:
     - "5432:5432"
   {{- $networks | indent 2 }}
+  {{- end }}
 {{- end }}

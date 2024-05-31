@@ -1,24 +1,29 @@
 {{- /*
-https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisInsight%20is%20an%20intuitive%20and,Docker%20container%20and%20Kubernetes%20Pods.
-  expose:
-    - "8001"
+Docs:
+  - https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisInsight%20is%20an%20intuitive%20and,Docker%20container%20and%20Kubernetes%20Pods.
+TODO:
+  - make port dynamic
 */}}
-
 {{- define "redisinsight" -}}
+  {{- /* args */}}
   {{- $globals := .globals -}}
-  {{- $app_name := .app_name -}}
   {{- $software_type := .software_type -}}
-  {{- $component_type := .component_type -}}
   {{- $component_name := .component_name -}}
+  {{- $app_name := .app_name -}}
+  {{- $project_name := .project_name -}}
+  {{- $project_obj := .project_obj -}}
+  {{- /* globals */}}
   {{- $values := $globals.Values -}}
+  {{- $image_only := $values.image_only -}}
   {{- $platform := $values.platform -}}
-  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
-  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
-  {{- $image_configs := .image_configs -}}
-  {{- $tag := $image_configs.tag -}}
-  {{- $path := $image_configs.path -}}
-  {{- $workdir := $image_configs._workdir -}}
-
+  {{- /* image configs */}}
+  {{- $path := $project_obj.path -}}
+  {{- $workdir := $project_obj._workdir -}}
+  {{- $tag := $project_obj.tag -}}
+  {{- /* local variables */}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name -}}
+  {{- /* imported modules */}}
   {{- $depends_on := include "docker-compose.functions.depends_on" (
         dict
           "global" $values
@@ -36,10 +41,14 @@ https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisIn
   -}}
 
 {{ $service_name }}:
+  image: "redislabs/{{ $component_name }}:{{ $tag }}"
+  platform: {{ $platform }}
+  {{- if not $image_only }}
   container_name: {{ $service_name }}
   hostname: {{ $service_name }}
-  image: "redislabs/{{ $component_name }}:{{ $tag }}"
   restart: always
+  stdin_open: true
+  tty: true
   environment: {}
   volumes:
     - "./volumes/{{ $service_name }}:/db"
@@ -48,4 +57,5 @@ https://collabnix.com/running-redisinsight-using-docker-compose/#:~:text=RedisIn
     - 5540:5540
   {{- $networks | indent 2 }}
   {{- $depends_on | indent 2 }}
+  {{- end }}
 {{- end }}

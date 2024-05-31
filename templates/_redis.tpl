@@ -4,23 +4,29 @@ Docs:
   - https://www.docker.com/blog/how-to-use-the-redis-docker-official-image/
 
 TODO:
+  - make port dynamic
   - Support configs volume.
 */}}
 {{- define "redis" -}}
+  {{- /* args */}}
   {{- $globals := .globals -}}
-  {{- $app_name := .app_name -}}
   {{- $software_type := .software_type -}}
-  {{- $component_type := .component_type -}}
   {{- $component_name := .component_name -}}
+  {{- $app_name := .app_name -}}
+  {{- $project_name := .project_name -}}
+  {{- $project_obj := .project_obj -}}
+  {{- /* globals */}}
   {{- $values := $globals.Values -}}
+  {{- $image_only := $values.image_only -}}
   {{- $platform := $values.platform -}}
-  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
-  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
-  {{- $image_configs := .image_configs -}}
-  {{- $tag := $image_configs.tag -}}
-  {{- $path := $image_configs.path -}}
-  {{- $workdir := $image_configs._workdir -}}
-
+  {{- /* image configs */}}
+  {{- $path := $project_obj.path -}}
+  {{- $workdir := $project_obj._workdir -}}
+  {{- $tag := $project_obj.tag -}}
+  {{- /* local variables */}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name -}}
+  {{- /* imported modules */}}
   {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
   {{- $networks := include "docker-compose.functions.networks" (
         dict
@@ -31,10 +37,14 @@ TODO:
   -}}
 
 {{ $service_name }}:
+  image: "{{ $component_name }}:{{ $tag }}"
+  platform: {{ $platform }}
+  {{- if not $image_only }}
   container_name: {{ $service_name }}
   hostname: {{ $service_name }}
-  image: "{{ $component_name }}:{{ $tag }}"
   restart: always
+  stdin_open: true
+  tty: true
   environment:
     REDIS_USERNAME: {{ $values.auth.username }}
   volumes:
@@ -49,4 +59,5 @@ TODO:
     - "6379:6379"
   command: "redis-server --save 20 1 --loglevel warning --requirepass {{ $values.auth.password }}"
   {{- $networks | indent 2 -}}
+  {{- end }}
 {{- end }}

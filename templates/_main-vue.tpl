@@ -1,42 +1,62 @@
 {{- /*
 TODO:
   - build image per VITE_APP_PLATFORM_COMPONENTS
+  - make port dynamic
 */}}
-
 {{- define "main-vue" -}}
+  {{- /* args */}}
   {{- $globals := .globals -}}
-  {{- $app_name := .app_name -}}
   {{- $software_type := .software_type -}}
-  {{- $component_type := .component_type -}}
   {{- $component_name := .component_name -}}
+  {{- $app_name := .app_name -}}
+  {{- $project_name := .project_name -}}
+  {{- $project_obj := .project_obj -}}
+  {{- /* globals */}}
   {{- $values := $globals.Values -}}
+  {{- $image_only := $values.image_only -}}
   {{- $platform := $values.platform -}}
-  {{- $service_name := printf "%s-%s-%s" $component_type $app_name $component_name -}}
-  {{- $folder_name := printf "%s/%s/%s" $component_type $app_name $component_name -}}
-  {{- $image_configs := .image_configs -}}
-  {{- $path := $image_configs.path -}}
-  {{- $workdir := $image_configs._workdir -}}
-  {{- $depends_on := include "docker-compose.functions.depends_on" (dict "global" $values "depends_on" (list "postgres" "redis")) -}}
+  {{- /* image configs */}}
+  {{- $path := $project_obj.path -}}
+  {{- $workdir := $project_obj._workdir -}}
+  {{- $tag := $project_obj.tag -}}
+  {{- /* local variables */}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name -}}
+  {{- /* imported modules */}}
+  {{- $depends_on := include "docker-compose.functions.depends_on" (
+        dict
+          "global" $values
+          "depends_on" (list "postgres" "redis")
+      )
+  -}}
   {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
 
 {{ $service_name }}:
+  build:
+    {{- /*
+      TODO:
+        - make sure you handle same naming convention as github repo names
+          Ex: there are names that *-camel_case_repo_name-*
+          Name of the repos should be the same as the image names
+    */}}
+    context: "{{ $path }}{{ $folder_name }}"
+    dockerfile: "Dockerfile"
+    target: {{ $project_obj.target }}
+    args:
+      _WORKDIR: {{ $project_obj._workdir }}
+      VITE_APP_PLATFORM_SCRIPT_TARGET: {{ $project_obj.target_script }}
+      VITE_APP_PLATFORM_CLUSTER_NAME: {{ $values.env.cluster_name }}
+      VITE_APP_PLATFORM_CLUSTER_TYPE: {{ $values.env.cluster_type }}
+      VITE_APP_PLATFORM_HOST: {{ $project_obj.host }}
+      VITE_APP_PLATFORM_PORT: "8080"
+  image: "{{ $service_name }}:{{ $tag }}"
+  platform: {{ $platform }}
+  {{- if not $image_only }}
   container_name: {{ $service_name }}
-  image: "{{ $service_name }}:latest"
+  hostname: {{ $service_name }}
   restart: "always"
   stdin_open: true
   tty: true
-  platform: {{ $platform }}
-  build:
-    context: "{{ $path }}{{ $folder_name }}"
-    dockerfile: "Dockerfile"
-    target: {{ $image_configs.target }}
-    args:
-      _WORKDIR: {{ $image_configs._workdir }}
-      VITE_APP_PLATFORM_SCRIPT_TARGET: {{ $image_configs.target_script }}
-      VITE_APP_PLATFORM_CLUSTER_NAME: {{ $values.env.cluster_name }}
-      VITE_APP_PLATFORM_CLUSTER_TYPE: {{ $values.env.cluster_type }}
-      VITE_APP_PLATFORM_HOST: {{ $image_configs.host }}
-      VITE_APP_PLATFORM_PORT: "8080"
   environment: {}
   {{- /*
     environment:
@@ -47,9 +67,11 @@ TODO:
   {{ $service_labels }}
   ports:
     - "8080:8080"
+  {{- $depends_on | indent 2 }}
   {{- /*
     expose:
       - "8080"
     command: npm run serve
   */}}
+  {{- end }}
 {{- end }}

@@ -18,14 +18,20 @@
 #   - for private images handle the tags dinamically on build only and run
 #     locally
 #   - For private image handle local/
+#   - There is still work to do when merge_apps: true, it create volumes for all
+#     containes for each image. It should create one volume per image. Find out
+#     if we need networks and depend_on when building separate containers.
 #
 apps:
   - snitzsh
   - test
 
 user: "" # user that executed this scripts: gitlab pipeline
-
 domain: "com.docker.compose"
+
+# true : it build the image only.
+# false : it creates a container
+image_only: true
 
 #
 # TODO:
@@ -33,12 +39,12 @@ domain: "com.docker.compose"
 # NOTE:
 #   - if `true`, it creates documents in docker-compose.yaml
 #
-merge_apps: true
+merge_apps: false
 # if `merge_apps: true`, it will use this name for the apps. in docker desktop
 default_app_name: platform
 
 # TODO:
-# Support multi registries
+#   - Support multi registries
 registries:
   - docker # local (desktop) or remote (based on cluster_type)
   - harbor
@@ -63,31 +69,33 @@ env:
 
 components:
   public:
-    snitzsh:
-      dbs:
+    dbs:
+      snitzsh:
+        postgres:
+          enabled: true
+          tag: latest
+      test:
         postgres:
           enabled: false
           tag: latest
-      db-uis:
+    db-uis:
+      snitzsh:
+        pgadmin4:
+          enabled: true
+          tag: latest
+      test:
         pgadmin4:
           enabled: false
           tag: latest
-      cache-dbs:
+    cache-dbs:
+      snitzsh:
         redis:
-          enabled: false
+          enabled: true
           tag: latest
-      cache-db-uis:
+    cache-db-uis:
+      snitzsh:
         redisinsight:
-          enabled: false
-          tag: latest
-    test:
-      dbs:
-        postgres:
-          enabled: false
-          tag: latest
-      db-uis:
-        pgadmin4:
-          enabled: false
+          enabled: true
           tag: latest
 
   # TODO:
@@ -100,13 +108,17 @@ components:
   #           .xxxx
   #
   private:
-    snitzsh:
-      apis:
+    apis:
+      snitzsh:
         main-fastify:
-          enabled: false
+          enabled: true
           path: "../../../"
+          tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage
+          template:
+            language: "fastify"
+            type: apis # apis | ui | job | cronjob
           # TODO:
           #  - findout if .cargo/config.toml is equivalent to package.json in node
           #    maybe for rust is not neccesary.
@@ -115,35 +127,49 @@ components:
           port: "3000" # this will be dynamic handled by helm
         main-rust:
           enabled: true
+          # Path to the project inside ./snitzsh
+          # (assuming you use boilerplate to pull repositories)
           path: "../../../"
+          template:
+            language: "rust"
+            type: apis # apis | ui | job | cronjob
+          tag: "latest"
           _workdir: /app
-          target: "dev-stage" # dockerfile stage
+          # opts: dev-stage, build-stage
+          target: "dev-stage"
           # TODO:
           #  - findout if .cargo/config.toml is equivalent to package.json in node
           #    maybe for rust is not neccesary.
           target_script: "dev"
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
-      uis:
+    uis:
+      snitzsh:
         main-vue:
           enabled: true
+          template:
+            language: "vue"
+            type: ui # apis | ui | job | cronjob
           path: "../../../"
+          tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage
           target_script: "dev" # .scripts{} in package.json
           host: "0.0.0.0"
           port: "8080" # this will be dynamic handled by helm
-    test:
-      uis:
+      test:
         main-vue:
           enabled: false
           path: "../../../"
+          template:
+            language: "vue"
+            type: ui # apis | ui | job | cronjob
+          tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage
           target_script: "dev" # .scripts{} in package.json
           host: "0.0.0.0"
           port: "8080" # this will be dynamic handled by helm
-
 
 docker:
   volumes: true
