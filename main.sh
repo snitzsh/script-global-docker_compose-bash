@@ -25,6 +25,7 @@
 # * $1 = file_name
 #
 dockerComposeUp () {
+
   file_name=$1
 
   docker \
@@ -36,7 +37,6 @@ dockerComposeUp () {
         --build \
         --detach \
         --force-recreate
-
         # --no-log-prefix
         # --no-start
 }
@@ -76,33 +76,6 @@ snitchDockerPruneNoneImages() {
 #   - null
 #
 main () {
-  echo "$@"
-
-  # run_command=""
-  # exec_command=""
-  # while [[ $# -gt 0 ]]; do
-  #   key="$1"
-  #   case $key in
-  #     run )
-  #       run_command="run"
-  #       shift
-  #       ;;
-  #     exec )
-  #       exec_command="exec"
-  #       shift
-  #       ;;
-  #     * )
-  #       if [[ -n "$exec_command" ]]; then
-  #         exec_arg="$1"
-  #         echo "Exec Arg: $exec_arg"
-  #       elif [[ -n "$run_command" ]]; then
-  #         run_arg="$1"
-  #         echo "Run arg: $run_arg"
-  #       fi
-  #       shift
-  #       ;;
-  #   esac
-  # done
 
   # echo "Run: $run_command"
   # echo "Exec: $exec_command"

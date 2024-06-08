@@ -76,7 +76,7 @@ components:
           tag: latest
       test:
         postgres:
-          enabled: false
+          enabled: true
           tag: latest
     db-uis:
       snitzsh:
@@ -85,7 +85,7 @@ components:
           tag: latest
       test:
         pgadmin4:
-          enabled: false
+          enabled: true
           tag: latest
     cache-dbs:
       snitzsh:
@@ -159,7 +159,7 @@ components:
           port: "8080" # this will be dynamic handled by helm
       test:
         main-vue:
-          enabled: false
+          enabled: true
           path: "../../../"
           template:
             language: "vue"

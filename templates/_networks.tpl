@@ -1,3 +1,7 @@
+{{- /*
+TODO:
+  - disbaled networks if image_only: true
+*/}}
 {{- define "networks" -}}
 {{- $globals := .globals }}
 {{- $service_name := .service_name }}
