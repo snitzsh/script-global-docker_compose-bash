@@ -90,9 +90,9 @@ main () {
     # TODO: make sure to handle 2 documnet output.
     # TODO: support --arguments to override
     helm template . > "./${file_name}"
-
+    exit 1
     sleep 3
-    # dockerComposeUp ${file_name}
+    dockerComposeUp ${file_name}
     # Gets the API of postgress
     # docker inspect <[postgres-container-id] | grep IPAddress
   elif [[ $1 == "destroy" ]]; then

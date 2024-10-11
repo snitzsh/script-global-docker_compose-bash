@@ -41,7 +41,7 @@ TODO:
   -}}
 
 {{ $service_name }}:
-  image: "redislabs/{{ $component_name }}:{{ $tag }}"
+  image: "redislabs/{{ $project_name }}:{{ $tag }}"
   platform: {{ $platform }}
   {{- if not $image_only }}
   container_name: {{ $service_name }}

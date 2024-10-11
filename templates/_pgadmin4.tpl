@@ -39,7 +39,7 @@ TODO:
   -}}
 
 {{ $service_name }}:
-  image: "dpage/{{ $component_name }}:{{ $tag }}"
+  image: "dpage/{{ $project_name }}:{{ $tag }}"
   platform: {{ $platform }}
   {{- if not $image_only }}
   container_name: {{ $service_name }}

@@ -1,78 +1,125 @@
 ---
 # Source: docker-compose/templates/main.yaml
-name: apis
-services:
-  apis-snitzsh-main-fastify:
-    build:
-      args:
-        _WORKDIR: /app
-        RUST_APP_PLATFORM_CLUSTER_NAME: dev
-        RUST_APP_PLATFORM_CLUSTER_TYPE: local
-        RUST_APP_PLATFORM_HOST: 0.0.0.0
-        RUST_APP_PLATFORM_PORT: "3000"
-        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
-      context: ../../../apis/snitzsh/main-fastify
-      dockerfile: Dockerfile
-      target: dev-stage
-    image: apis-snitzsh-main-fastify:latest
-    platform: linux/arm64
-  apis-snitzsh-main-rust:
-    build:
-      args:
-        _WORKDIR: /app
-        RUST_APP_PLATFORM_CLUSTER_NAME: dev
-        RUST_APP_PLATFORM_CLUSTER_TYPE: local
-        RUST_APP_PLATFORM_HOST: 0.0.0.0
-        RUST_APP_PLATFORM_PORT: "3000"
-        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
-      context: ../../../apis/snitzsh/main-rust
-      dockerfile: Dockerfile
-      target: dev-stage
-    image: apis-snitzsh-main-rust:latest
-    platform: linux/arm64
----
-# Source: docker-compose/templates/main.yaml
-name: cache-db-uis
+name: platform
 services:
   cache-db-uis-snitzsh-redisinsight:
-    image: redislabs/cache-db-uis:latest
+    container_name: cache-db-uis-snitzsh-redisinsight
+    depends_on:
+    - cache-dbs-snitzsh-redis
+    environment: {}
+    hostname: cache-db-uis-snitzsh-redisinsight
+    image: redislabs/redisinsight:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redisinsight
+    - com.docker.compose.service-name=cache-db-uis-snitzsh-redisinsight
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - cache-dbs-snitzsh-redis
     platform: linux/arm64
----
-# Source: docker-compose/templates/main.yaml
-name: cache-dbs
-services:
+    ports:
+    - 5540:5540
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-db-uis-snitzsh-redisinsight:/db
   cache-dbs-snitzsh-redis:
-    image: cache-dbs:latest
+    command: redis-server --save 20 1 --loglevel warning --requirepass root
+    container_name: cache-dbs-snitzsh-redis
+    environment:
+      REDIS_USERNAME: root
+    expose:
+    - "6379"
+    hostname: cache-dbs-snitzsh-redis
+    image: redis:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-dbs
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redis
+    - com.docker.compose.service-name=cache-dbs-snitzsh-redis
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - cache-dbs-snitzsh-redis
     platform: linux/arm64
----
-# Source: docker-compose/templates/main.yaml
-name: db-uis
-services:
+    ports:
+    - 6379:6379
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-dbs-snitzsh-redis/data:/data
   db-uis-snitzsh-pgadmin4:
-    image: dpage/db-uis:latest
+    container_name: db-uis-snitzsh-pgadmin4
+    depends_on:
+    - dbs-snitzsh-postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    expose:
+    - "80"
+    hostname: db-uis-snitzsh-pgadmin4
+    image: dpage/pgadmin4:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=pgadmin4
+    - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - dbs-snitzsh-postgres
     platform: linux/arm64
----
-# Source: docker-compose/templates/main.yaml
-name: dbs
-services:
+    ports:
+    - 5050:80
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/db-uis-snitzsh-pgadmin4:/var/lib/pgadmin
   dbs-snitzsh-postgres:
-    image: dbs:latest
+    container_name: dbs-snitzsh-postgres
+    environment:
+      POSTGRES_DB: snitzsh_db
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
+    expose:
+    - "5432"
+    hostname: dbs-snitzsh-postgres
+    image: postgres:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=dbs
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=postgres
+    - com.docker.compose.service-name=dbs-snitzsh-postgres
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - dbs-snitzsh-postgres
     platform: linux/arm64
----
-# Source: docker-compose/templates/main.yaml
-name: uis
-services:
-  uis-snitzsh-main-vue:
-    build:
-      args:
-        _WORKDIR: /app
-        VITE_APP_PLATFORM_CLUSTER_NAME: dev
-        VITE_APP_PLATFORM_CLUSTER_TYPE: local
-        VITE_APP_PLATFORM_HOST: 0.0.0.0
-        VITE_APP_PLATFORM_PORT: "8080"
-        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
-      context: ../../../uis/snitzsh/main-vue
-      dockerfile: Dockerfile
-      target: dev-stage
-    image: uis-snitzsh-main-vue:latest
-    platform: linux/arm64
+    ports:
+    - 5432:5432
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/dbs-snitzsh-postgres/data:/var/lib/postgresql/data
+    - ./volumes/dbs-snitzsh-postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+volumes:
+  cache-db-uis-snitzsh-redisinsight:
+    driver: local
+  cache-dbs-snitzsh-redis:
+    driver: local
+  db-uis-snitzsh-pgadmin4:
+    driver: local
+  dbs-snitzsh-postgres:
+    driver: local
+      
+networks:
+  cache-dbs-snitzsh-redis:
+    driver: bridge
+  dbs-snitzsh-postgres:
+    driver: bridge

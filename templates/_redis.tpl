@@ -37,7 +37,7 @@ TODO:
   -}}
 
 {{ $service_name }}:
-  image: "{{ $component_name }}:{{ $tag }}"
+  image: "{{ $project_name }}:{{ $tag }}"
   platform: {{ $platform }}
   {{- if not $image_only }}
   container_name: {{ $service_name }}
