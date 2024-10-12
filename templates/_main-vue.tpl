@@ -26,6 +26,7 @@ TODO:
   {{- $depends_on := include "docker-compose.functions.depends_on" (
         dict
           "global" $values
+          "app_name" $app_name
           "depends_on" (list "postgres" "redis")
       ) | fromJson | toYaml | nindent 2
   }}

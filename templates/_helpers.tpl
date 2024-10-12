@@ -65,29 +65,8 @@ RETURN:
       {{- end }}
     {{- end }}
   {{- end }}
-  {{- /* Multiple apps on its own docker image */}}
-  {{- if not $merge_apps }}
-    {{- range $key, $services := $all_app_services }}
-name: {{ $key }}
-services:
-  {{- $services | toYaml | nindent 2 }}
-      {{- if not $image_only }}
-        {{- if $docker.volumes }}
-{{- include "docker-compose.volumes" $ | fromJson | toYaml | nindent 0 }}
-        {{- end }}
-        {{- if $docker.networks }}
-{{- include "docker-compose.networks" (
-      dict
-        "globals" $
-        "service_name" (first (keys $services))
-    ) | fromJson | toYaml | nindent 0
-}}
-        {{- end }}
-      {{- end }}
----
-    {{- end }}
   {{- /* Merged multiple apps. */}}
-  {{- else }}
+  {{- if $merge_apps }}
     {{- if gt (len $merged_app_services) 0 }}
 {{- /*
 TODO:
@@ -112,6 +91,27 @@ services:
 }}
         {{- end }}
       {{- end }}
+    {{- end }}
+  {{- /* Multiple apps on its own docker image */}}
+  {{- else }}
+    {{- range $key, $services := $all_app_services }}
+name: {{ $key }}
+services:
+  {{- $services | toYaml | nindent 2 }}
+      {{- if not $image_only }}
+        {{- if $docker.volumes }}
+{{- include "docker-compose.volumes" $ | fromJson | toYaml | nindent 0 }}
+        {{- end }}
+        {{- if $docker.networks }}
+{{- include "docker-compose.networks" (
+      dict
+        "globals" $
+        "service_name" (first (keys $services))
+    ) | fromJson | toYaml | nindent 0
+}}
+        {{- end }}
+      {{- end }}
+---
     {{- end }}
   {{- end }}
 {{- end }}
@@ -154,7 +154,7 @@ depends_on:
         {{- /* loops components (inside components main_object) */}}
         {{- range $component_name, $component_obj := $software_type_obj }}
           {{- /* loops apps */}}
-          {{- range $app_name, $app_obj := $component_obj }}
+          {{- range $app_name_2, $app_obj := $component_obj }}
             {{- /* loops: projects */}}
             {{- range $project_name, $project_obj := $app_obj }}
               {{- if and ($project_obj.enabled) (eq $item $project_name) }}

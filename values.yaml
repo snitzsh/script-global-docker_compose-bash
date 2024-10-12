@@ -22,6 +22,9 @@
 #     containes for each image. It should create one volume per image. Find out
 #     if we need networks and depend_on when building separate containers.
 #
+
+docker_compose_version: "TODO"
+
 apps:
   - snitzsh
 
@@ -32,6 +35,19 @@ domain: "com.docker.compose"
 # false : it creates a container
 image_only: false
 
+# TODO:
+#   - add support for this property
+#   - if true it should only create one db and the app should handle creating a
+#     database for each app
+#
+share_db: false
+# TODO:
+#   - add support for this property
+#   - if true it should only create one db and the app should handle creating a
+#     database for each app
+#
+share_cache_db: false
+
 #
 # TODO:
 #   - fully support this prop.
@@ -39,7 +55,9 @@ image_only: false
 #   - if `true`, it creates documents in docker-compose.yaml
 #
 merge_apps: true
-# if `merge_apps: true`, it will use this name for the apps. in docker desktop
+
+# NOTE:
+#   - if `merge_apps: true`, it will use this name for the apps. in docker desktop
 default_app_name: platform
 
 # TODO:
