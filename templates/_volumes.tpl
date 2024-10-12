@@ -8,5 +8,5 @@ TODO:
         "global" .Values
     ) | fromJson
 }}
-{{- $volumes | toJson }}
+{{ $volumes | toJson }}
 {{- end }}

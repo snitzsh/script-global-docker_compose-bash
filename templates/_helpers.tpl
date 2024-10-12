@@ -139,11 +139,11 @@ depends_on:
 - dbs-snitzsh-postgres
 */}}
 {{- define "docker-compose.functions.depends_on" -}}
-  {{- $global := .global -}}
-  {{- $components := $global.components -}}
-  {{- $app_name := .app_name -}}
-  {{- $depends_on := .depends_on -}}
-  {{- $obj := dict "depends_on" (list) -}}
+  {{- $global := .global }}
+  {{- $components := $global.components }}
+  {{- $app_name := .app_name }}
+  {{- $depends_on := .depends_on }}
+  {{- $obj := dict "depends_on" (list) }}
 
   {{- if gt (len $depends_on) 0 }}
     {{- range $item := $depends_on }}
@@ -164,7 +164,7 @@ depends_on:
                           )
                         )
                     )
-                -}}
+                }}
               {{- end }}
             {{- end }}
           {{- end }}

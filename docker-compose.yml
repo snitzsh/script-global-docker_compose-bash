@@ -141,8 +141,8 @@ services:
     - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
     - com.docker.compose.platform=linux/arm64
     networks:
-    - dbs-test-postgres
     - dbs-snitzsh-postgres
+    - dbs-test-postgres
     platform: linux/arm64
     ports:
     - 5050:80

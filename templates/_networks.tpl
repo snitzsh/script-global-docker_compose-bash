@@ -31,5 +31,5 @@ OUTPUT EXAMPLE:
         "service_name" $service_name
     ) | fromJson
 }}
-{{- $networks | toJson }}
+{{ $networks | toJson }}
 {{- end }}
