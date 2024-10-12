@@ -118,8 +118,8 @@ services:
 
 {{- /*
 TODO:
-  - find out how to return `depends_on: []` without needing to indent when
-    calling the function.
+  - return {depend_on: - dbs-snitzsh-postgres} for db-uis-test-pgadmin4, instead
+    of dbs-test-postgres
 
 NOTE:
   - Read `IMPORTANT` comment (inside the function) to prevent issues.
@@ -178,7 +178,7 @@ depends_on:
       the function, else indent.
   */}}
   {{- if gt (len $obj.depends_on) 0 }}
-{{ $obj | toYaml }}
+{{ $obj | toJson }}
   {{- end }}
 {{- end }}
 

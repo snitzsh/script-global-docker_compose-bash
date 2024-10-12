@@ -29,7 +29,7 @@ TODO:
           "global" $values
           "app_name" $app_name
           "depends_on" (list "redis")
-      )
+      ) | fromJson | toYaml | nindent 2
   }}
   {{- $service_labels := (
         include "docker-compose.functions.service-labels" .
@@ -59,6 +59,6 @@ TODO:
   ports:
     - 5540:5540
   {{ $networks }}
-  {{ $depends_on | indent 2 }}
+  {{ $depends_on }}
   {{- end }}
 {{- end }}

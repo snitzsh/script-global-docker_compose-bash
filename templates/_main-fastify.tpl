@@ -27,7 +27,7 @@ TODO:
         dict
           "global" $values
           "depends_on" (list "postgres" "redis")
-      )
+      ) | fromJson | toYaml | nindent 2
   }}
   {{- $service_labels := (
         include "docker-compose.functions.service-labels" .
@@ -66,7 +66,7 @@ TODO:
   {{ $service_labels }}
   ports:
     - '3000:3000'
-  {{- $depends_on | indent 2 }}
+  {{ $depends_on }}
   {{- /*
   command: npm run local
   */}}
