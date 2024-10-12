@@ -2,7 +2,7 @@
 TODO:
   - make port dynamic
 */}}
-{{- define "pgadmin4" -}}
+{{- define "docker-compose.pgadmin4" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}

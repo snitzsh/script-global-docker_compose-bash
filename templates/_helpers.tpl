@@ -39,7 +39,7 @@ RETURN:
         {{- range $project_name, $project_obj := $app_obj }}
           {{- if $project_obj.enabled }}
             {{- $app_services = merge $app_services (
-                  include $project_name (
+                  include (printf "%s.%s" $.Chart.Name $project_name) (
                     dict
                       "globals" $
                       "software_type" $software_type
@@ -73,10 +73,10 @@ services:
   {{- $services | toYaml | nindent 2 }}
       {{- if not $image_only }}
         {{- if $docker.volumes }}
-{{- include "volumes" $ | fromJson | toYaml | nindent 0 }}
+{{- include "docker-compose.volumes" $ | fromJson | toYaml | nindent 0 }}
         {{- end }}
         {{- if $docker.networks }}
-{{- include "networks" (
+{{- include "docker-compose.networks" (
       dict
         "globals" $
         "service_name" (first (keys $services))
@@ -101,10 +101,10 @@ services:
       {{- end }}
       {{- if not $image_only }}
         {{- if $docker.volumes }}
-{{- include "volumes" $ | fromJson | toYaml | nindent 0 }}
+{{- include "docker-compose.volumes" $ | fromJson | toYaml | nindent 0 }}
         {{- end }}
         {{- if $docker.networks }}
-{{- include "networks" (
+{{- include "docker-compose.networks" (
       dict
         "globals" $
         "service_name" "all"
@@ -144,6 +144,8 @@ depends_on:
   {{- $app_name := .app_name }}
   {{- $depends_on := .depends_on }}
   {{- $obj := dict "depends_on" (list) }}
+  {{- $all_app_services := dict }}
+  {{- $merged_app_services := dict }}
 
   {{- if gt (len $depends_on) 0 }}
     {{- range $item := $depends_on }}

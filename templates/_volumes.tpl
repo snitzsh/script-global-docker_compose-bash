@@ -2,7 +2,7 @@
 TODO:
   - disbaled networks if image_only: true
 */}}
-{{- define "volumes" -}}
+{{- define "docker-compose.volumes" -}}
 {{- $volumes := include "docker-compose.functions.volumes" (
       dict
         "global" .Values

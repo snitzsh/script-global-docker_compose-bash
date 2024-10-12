@@ -20,7 +20,7 @@ OUTPUT EXAMPLE:
     cache-dbs-snitzsh-redis:
       driver: bridge
 */}}
-{{- define "networks" -}}
+{{- define "docker-compose.networks" -}}
 {{- $globals := .globals }}
 {{- $service_name := .service_name }}
 {{- $networks := include "docker-compose.functions.networks" (

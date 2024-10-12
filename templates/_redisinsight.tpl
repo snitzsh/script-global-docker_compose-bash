@@ -4,7 +4,7 @@ Docs:
 TODO:
   - make port dynamic
 */}}
-{{- define "redisinsight" -}}
+{{- define "docker-compose.redisinsight" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}

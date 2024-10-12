@@ -3,7 +3,7 @@ TODO:
   - build image per VITE_APP_PLATFORM_COMPONENTS
   - make port dynamic
 */}}
-{{- define "main-vue" -}}
+{{- define "docker-compose.main-vue" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}

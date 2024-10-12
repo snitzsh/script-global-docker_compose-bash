@@ -7,7 +7,7 @@ TODO:
   - make port dynamic
   - Support configs volume.
 */}}
-{{- define "redis" -}}
+{{- define "docker-compose.redis" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}

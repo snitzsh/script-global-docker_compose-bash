@@ -3,7 +3,7 @@ TODO:
   - build image per FASTIFY_APP_PLATFORM_COMPONENTS
   - make port dynamic
 */}}
-{{- define "main-fastify" -}}
+{{- define "docker-compose.main-fastify" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}

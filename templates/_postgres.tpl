@@ -4,7 +4,7 @@ TODO:
   - make port dynamic
   - Support configs volume.
 */}}
-{{- define "postgres" -}}
+{{- define "docker-compose.postgres" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}
