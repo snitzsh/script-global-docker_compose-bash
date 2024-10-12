@@ -75,7 +75,7 @@ components:
           tag: latest
       test:
         postgres:
-          enabled: false
+          enabled: true
           tag: latest
     db-uis:
       snitzsh:
@@ -84,7 +84,7 @@ components:
           tag: latest
       test:
         pgadmin4:
-          enabled: false
+          enabled: true
           tag: latest
     cache-dbs:
       snitzsh:
@@ -110,7 +110,7 @@ components:
     apis:
       snitzsh:
         main-fastify:
-          enabled: false
+          enabled: true
           path: "../../../"
           tag: "latest"
           _workdir: /app
@@ -125,7 +125,7 @@ components:
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
         main-rust:
-          enabled: false
+          enabled: true
           # Path to the project inside ./snitzsh
           # (assuming you use boilerplate to pull repositories)
           path: "../../../"
@@ -145,7 +145,7 @@ components:
     uis:
       snitzsh:
         main-vue:
-          enabled: false
+          enabled: true
           template:
             language: "vue"
             type: ui # apis | ui | job | cronjob
@@ -158,7 +158,7 @@ components:
           port: "8080" # this will be dynamic handled by helm
       test:
         main-vue:
-          enabled: false
+          enabled: true
           path: "../../../"
           template:
             language: "vue"

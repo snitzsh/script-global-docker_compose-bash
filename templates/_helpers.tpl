@@ -305,11 +305,11 @@ OUTPUT EXAMPLE:
       {{- /* TODO: figureout why this if-statement is for */}}
       {{ if not (eq $service_name "all") }}
       {{- end }}
-{{- $obj | toJson }}
+{{ $obj | toJson }}
     {{- else if eq $data_type "array" }}
       {{- $arr := keys $obj.networks }}
       {{- $obj = dict "networks" $arr }}
-{{ $obj | toYaml }}
+{{ $obj | toJson }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -363,8 +363,6 @@ RETURN:
           (printf "%s.target-script=%s" $domain $project_obj.target_script)
     }}
     {{- $labels = concat $labels $private_labels }}
-  {{- end -}}
-
-labels:
-  {{- $labels | toYaml | nindent 2 }}
+  {{- end }}
+  {{ (dict "labels" $labels) | toJson }}
 {{- end }}

@@ -5,31 +5,34 @@ TODO:
 */}}
 {{- define "main-fastify" -}}
   {{- /* args */}}
-  {{- $globals := .globals -}}
-  {{- $software_type := .software_type -}}
-  {{- $component_name := .component_name -}}
-  {{- $app_name := .app_name -}}
-  {{- $project_name := .project_name -}}
-  {{- $project_obj := .project_obj -}}
+  {{- $globals := .globals }}
+  {{- $software_type := .software_type }}
+  {{- $component_name := .component_name }}
+  {{- $app_name := .app_name }}
+  {{- $project_name := .project_name }}
+  {{- $project_obj := .project_obj }}
   {{- /* globals */}}
-  {{- $values := $globals.Values -}}
-  {{- $image_only := $values.image_only -}}
-  {{- $platform := $values.platform -}}
+  {{- $values := $globals.Values }}
+  {{- $image_only := $values.image_only }}
+  {{- $platform := $values.platform }}
   {{- /* image configs */}}
-  {{- $path := $project_obj.path -}}
-  {{- $workdir := $project_obj._workdir -}}
-  {{- $tag := $project_obj.tag -}}
+  {{- $path := $project_obj.path }}
+  {{- $workdir := $project_obj._workdir }}
+  {{- $tag := $project_obj.tag }}
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
-  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name -}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name }}
   {{- /* imported modules */}}
   {{- $depends_on := include "docker-compose.functions.depends_on" (
         dict
           "global" $values
           "depends_on" (list "postgres" "redis")
       )
-  -}}
-  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  }}
+  {{- $service_labels := (
+        include "docker-compose.functions.service-labels" .
+      ) | fromJson | toYaml | nindent 2
+  }}
 
 {{ $service_name }}:
   build:

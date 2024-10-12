@@ -4,23 +4,23 @@ TODO:
 */}}
 {{- define "pgadmin4" -}}
   {{- /* args */}}
-  {{- $globals := .globals -}}
-  {{- $software_type := .software_type -}}
-  {{- $component_name := .component_name -}}
-  {{- $app_name := .app_name -}}
-  {{- $project_name := .project_name -}}
-  {{- $project_obj := .project_obj -}}
+  {{- $globals := .globals }}
+  {{- $software_type := .software_type }}
+  {{- $component_name := .component_name }}
+  {{- $app_name := .app_name }}
+  {{- $project_name := .project_name }}
+  {{- $project_obj := .project_obj }}
   {{- /* globals */}}
-  {{- $values := $globals.Values -}}
-  {{- $image_only := $values.image_only -}}
-  {{- $platform := $values.platform -}}
+  {{- $values := $globals.Values }}
+  {{- $image_only := $values.image_only }}
+  {{- $platform := $values.platform }}
   {{- /* image configs */}}
-  {{- $path := $project_obj.path -}}
-  {{- $workdir := $project_obj._workdir -}}
-  {{- $tag := $project_obj.tag -}}
+  {{- $path := $project_obj.path }}
+  {{- $workdir := $project_obj._workdir }}
+  {{- $tag := $project_obj.tag }}
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
-  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name -}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name }}
   {{- /* imported modules */}}
   {{- $depends_on := include "docker-compose.functions.depends_on" (
         dict
@@ -28,15 +28,18 @@ TODO:
           "app_name" $app_name
           "depends_on" (list "postgres")
       )
-  -}}
-  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  }}
+  {{- $service_labels := (
+        include "docker-compose.functions.service-labels" .
+      ) | fromJson | toYaml | nindent 2
+  }}
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values
           "networks" (list "postgres")
           "data_type" "array"
-      )
-  -}}
+      ) | fromJson | toYaml | nindent 2
+  }}
 
 {{ $service_name }}:
   image: "dpage/{{ $project_name }}:{{ $tag }}"
@@ -54,10 +57,10 @@ TODO:
     - "./volumes/{{ $service_name }}:/var/lib/pgadmin"
   {{ $service_labels }}
   expose:
-    - '80'
+    - "80"
   ports:
-    - '5050:80'
-  {{- $networks | indent 2 }}
+    - "5050:80"
+  {{ $networks }}
   {{- $depends_on | indent 2 }}
   {{- end }}
 {{- end }}
