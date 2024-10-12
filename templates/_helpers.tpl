@@ -137,6 +137,7 @@ RETURN:
 OUTPUT EXAMPLE:
 depends_on:
 - dbs-snitzsh-postgres
+
 */}}
 {{- define "docker-compose.functions.depends_on" -}}
   {{- $global := .global }}
@@ -179,8 +180,8 @@ depends_on:
     - Do not indent the below code. You must assign it to a variable when calling
       the function, else indent.
   */}}
+  {{ $obj | toJson }}
   {{- if gt (len $obj.depends_on) 0 }}
-{{ $obj | toJson }}
   {{- end }}
 {{- end }}
 
@@ -232,7 +233,7 @@ OUTPUT EXAMPLE:
     {{- end }}
   {{- end }}
   {{- if gt (len (keys $volumes.volumes)) 0 }}
-{{- $volumes | toJson }}
+    {{ $volumes | toJson }}
   {{- end }}
 {{- end }}
 
@@ -307,11 +308,11 @@ OUTPUT EXAMPLE:
       {{- /* TODO: figureout why this if-statement is for */}}
       {{ if not (eq $service_name "all") }}
       {{- end }}
-{{ $obj | toJson }}
+      {{ $obj | toJson }}
     {{- else if eq $data_type "array" }}
       {{- $arr := keys $obj.networks }}
       {{- $obj = dict "networks" $arr }}
-{{ $obj | toJson }}
+      {{ $obj | toJson }}
     {{- end }}
   {{- end }}
 {{- end }}

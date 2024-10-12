@@ -2,41 +2,6 @@
 # Source: docker-compose/templates/main.yaml
 name: platform
 services:
-  apis-snitzsh-main-fastify:
-    build:
-      args:
-        _WORKDIR: /app
-        RUST_APP_PLATFORM_CLUSTER_NAME: dev
-        RUST_APP_PLATFORM_CLUSTER_TYPE: local
-        RUST_APP_PLATFORM_HOST: 0.0.0.0
-        RUST_APP_PLATFORM_PORT: "3000"
-        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
-      context: ../../../apis/snitzsh/main-fastify
-      dockerfile: Dockerfile
-      target: dev-stage
-    container_name: apis-snitzsh-main-fastify
-    depends_on:
-    - dbs-snitzsh-postgres
-    environment: {}
-    hostname: apis-snitzsh-main-fastify
-    image: apis-snitzsh-main-fastify:latest
-    labels:
-    - com.docker.compose.software-type=private
-    - com.docker.compose.component-name=apis
-    - com.docker.compose.app-name=snitzsh
-    - com.docker.compose.project-name=main-fastify
-    - com.docker.compose.service-name=apis-snitzsh-main-fastify
-    - com.docker.compose.platform=linux/arm64
-    - com.docker.compose.docker-stage=dev-stage
-    - com.docker.compose.target-script=dev
-    platform: linux/arm64
-    ports:
-    - 3000:3000
-    restart: always
-    stdin_open: true
-    tty: true
-    volumes:
-    - ../../../apis/snitzsh/main-fastify:/app
   apis-snitzsh-main-rust:
     build:
       args:
@@ -72,6 +37,41 @@ services:
     tty: true
     volumes:
     - ../../../apis/snitzsh/main-rust:/app
+  apis-test-main-fastify:
+    build:
+      args:
+        _WORKDIR: /app
+        RUST_APP_PLATFORM_CLUSTER_NAME: dev
+        RUST_APP_PLATFORM_CLUSTER_TYPE: local
+        RUST_APP_PLATFORM_HOST: 0.0.0.0
+        RUST_APP_PLATFORM_PORT: "3000"
+        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../apis/test/main-fastify
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: apis-test-main-fastify
+    depends_on:
+    - dbs-test-postgres
+    environment: {}
+    hostname: apis-test-main-fastify
+    image: apis-test-main-fastify:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=apis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=main-fastify
+    - com.docker.compose.service-name=apis-test-main-fastify
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    platform: linux/arm64
+    ports:
+    - 3000:3000
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../apis/test/main-fastify:/app
   cache-db-uis-snitzsh-redisinsight:
     container_name: cache-db-uis-snitzsh-redisinsight
     depends_on:
@@ -154,7 +154,7 @@ services:
   db-uis-test-pgadmin4:
     container_name: db-uis-test-pgadmin4
     depends_on:
-    - dbs-snitzsh-postgres
+    - dbs-test-postgres
     environment:
       PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
       PGADMIN_DEFAULT_PASSWORD: root
@@ -252,7 +252,7 @@ services:
       target: dev-stage
     container_name: uis-snitzsh-main-vue
     depends_on:
-    - dbs-snitzsh-postgres
+    - apis-snitzsh-main-rust
     environment: {}
     hostname: uis-snitzsh-main-vue
     image: uis-snitzsh-main-vue:latest
@@ -287,7 +287,7 @@ services:
       target: dev-stage
     container_name: uis-test-main-vue
     depends_on:
-    - dbs-snitzsh-postgres
+    - apis-test-main-fastify
     environment: {}
     hostname: uis-test-main-vue
     image: uis-test-main-vue:latest
@@ -309,9 +309,9 @@ services:
     volumes:
     - ../../../uis/test/main-vue/src:/app/src
 volumes:
-  apis-snitzsh-main-fastify:
-    driver: local
   apis-snitzsh-main-rust:
+    driver: local
+  apis-test-main-fastify:
     driver: local
   cache-db-uis-snitzsh-redisinsight:
     driver: local

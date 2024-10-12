@@ -127,14 +127,14 @@ components:
   private:
     apis:
       snitzsh:
-        main-fastify:
+        main-rust:
           enabled: true
           path: "../../../"
           tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage
           template:
-            language: "fastify"
+            language: "rust"
             type: apis # apis | ui | job | cronjob
           # TODO:
           #  - findout if .cargo/config.toml is equivalent to package.json in node
@@ -142,13 +142,15 @@ components:
           target_script: "dev"
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
-        main-rust:
+          depend_on: []
+      test:
+        main-fastify:
           enabled: true
           # Path to the project inside ./snitzsh
           # (assuming you use boilerplate to pull repositories)
           path: "../../../"
           template:
-            language: "rust"
+            language: "fastify"
             type: apis # apis | ui | job | cronjob
           tag: "latest"
           _workdir: /app
@@ -160,6 +162,7 @@ components:
           target_script: "dev"
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
+          depend_on: []
     uis:
       snitzsh:
         main-vue:
@@ -174,6 +177,12 @@ components:
           target_script: "dev" # .scripts{} in package.json
           host: "0.0.0.0"
           port: "8080" # this will be dynamic handled by helm
+          depends_on:  # in case it depends on other component.
+            - main-rust
+            # - software_type: private
+            #   component_name: apis
+            #   app_name: snitzsh
+            #   project_name: main-rust
       test:
         main-vue:
           enabled: true
@@ -187,6 +196,12 @@ components:
           target_script: "dev" # .scripts{} in package.json
           host: "0.0.0.0"
           port: "8080" # this will be dynamic handled by helm
+          depends_on:  # in case it depends on other component.
+            - main-fastify
+            # - software_type: private
+            #   component_name: apis
+            #   app_name: test
+            #   project_name: main-fastify
 
 docker:
   volumes: true
