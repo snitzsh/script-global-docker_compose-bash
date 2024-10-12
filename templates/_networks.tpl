@@ -1,6 +1,24 @@
 {{- /*
 TODO:
   - disbaled networks if image_only: true
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Generates networks for the platform.
+
+ARGS:
+  - globals: dict
+  - service_name: string
+
+RETURN:
+  - yaml
+
+OUTPUT EXAMPLE:
+  networks:
+    cache-dbs-snitzsh-redis:
+      driver: bridge
 */}}
 {{- define "networks" -}}
 {{- $globals := .globals }}
@@ -11,7 +29,7 @@ TODO:
         "networks" (list "postgres" "redis")
         "data_type" "object"
         "service_name" $service_name
-    )
--}}
-{{- $networks -}}
+    ) | fromJson
+}}
+{{- $networks | toJson }}
 {{- end }}

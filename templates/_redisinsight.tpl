@@ -31,7 +31,7 @@ TODO:
           "depends_on" (list "redis")
       )
   -}}
-  {{- $service_labels := include "docker-compose.functions.service-labels" . -}}
+  {{- $service_labels := include "docker-compose.functions.service-labels" . }}
   {{- $networks := include "docker-compose.functions.networks" (
         dict
           "global" $values

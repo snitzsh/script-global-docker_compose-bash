@@ -6,7 +6,7 @@ TODO:
 {{- $volumes := include "docker-compose.functions.volumes" (
       dict
         "global" .Values
-    )
--}}
-{{- $volumes }}
+    ) | fromJson
+}}
+{{- $volumes | toJson }}
 {{- end }}

@@ -14,15 +14,15 @@ ARGS:
 RETURN:
   - `yaml`
 */}}
-{{- define "docker-compose.functions.services" -}}
-  {{- $apps := .Values.apps -}}
-  {{- $merge_apps := .Values.merge_apps -}}
-  {{- $default_app_name := .Values.default_app_name -}}
-  {{- $image_only := .Values.image_only -}}
-  {{- $components := .Values.components -}}
-  {{- $docker := .Values.docker -}}
-  {{- $all_app_services := dict -}}
-  {{- $merged_app_services := dict -}}
+{{- define "docker-compose.functions.services" }}
+  {{- $apps := .Values.apps }}
+  {{- $merge_apps := .Values.merge_apps }}
+  {{- $default_app_name := .Values.default_app_name }}
+  {{- $image_only := .Values.image_only }}
+  {{- $components := .Values.components }}
+  {{- $docker := .Values.docker }}
+  {{- $all_app_services := dict }}
+  {{- $merged_app_services := dict }}
   {{- /* loops: public, private */}}
   {{- range $software_type, $software_type_obj := $components }}
     {{- /* loops components (inside components main_object) */}}
@@ -73,10 +73,15 @@ services:
   {{- $services | toYaml | nindent 2 }}
       {{- if not $image_only }}
         {{- if $docker.volumes }}
-{{- include "volumes" $ }}
+{{- include "volumes" $ | fromJson | toYaml | nindent 0 }}
         {{- end }}
         {{- if $docker.networks }}
-{{- include "networks" (dict "globals" $ "service_name" (first (keys $services) )) }}
+{{- include "networks" (
+      dict
+        "globals" $
+        "service_name" (first (keys $services))
+    ) | fromJson | toYaml | nindent 0
+}}
         {{- end }}
       {{- end }}
 ---
@@ -92,14 +97,19 @@ TODO:
 name: {{ $default_app_name }}
 services:
       {{- range $key, $value := $merged_app_services }}
-  {{- $value | toYaml | nindent 2 }}
+{{- $value | toYaml | nindent 2 }}
       {{- end }}
       {{- if not $image_only }}
         {{- if $docker.volumes }}
-{{- include "volumes" $ }}
+{{- include "volumes" $ | fromJson | toYaml | nindent 0 }}
         {{- end }}
         {{- if $docker.networks }}
-{{- include "networks" (dict "globals" $ "service_name" "all") }}
+{{- include "networks" (
+      dict
+        "globals" $
+        "service_name" "all"
+    ) | fromJson | toYaml | nindent 0
+}}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -194,11 +204,10 @@ OUTPUT EXAMPLE:
       driver: local
 */}}
 {{- define "docker-compose.functions.volumes" -}}
-  {{- $global := .global -}}
-  {{- $components := $global.components -}}
-  {{- $apps := $global.apps -}}
-  {{- $volumes := dict "volumes" (dict) -}}
-
+  {{- $global := .global }}
+  {{- $components := $global.components }}
+  {{- $apps := $global.apps }}
+  {{- $volumes := dict "volumes" (dict) }}
   {{- /* loops: public, private */}}
   {{- range $software_type, $software_type_obj := $components }}
     {{- /* loops components (inside components main_object) */}}
@@ -210,18 +219,18 @@ OUTPUT EXAMPLE:
           {{- if $project_obj.enabled }}
             {{- $volume :=  dict
                   (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "local")
-            -}}
+            }}
             {{- $volumes = merge $volumes (
                   dict "volumes" $volume
                 )
-            -}}
+            }}
           {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}
   {{- if gt (len (keys $volumes.volumes)) 0 }}
-{{ $volumes | toYaml }}
+{{- $volumes | toJson }}
   {{- end }}
 {{- end }}
 
@@ -239,28 +248,31 @@ DESCRIPTION:
   - Creates a `networks` for a component.
 
 ARGS:
-  - $global = .Values
+  - $global: dict
+  - networks: list
+  - data_type: string
+  - service_name: string
 
 RETURN:
-  - `{volumes: {component-name: driver: <[name]> }}` or `Null`
+  - Json or Yaml or `Null`
 
 OUTPUT EXAMPLE:
+  json:
+  {"networks":{"cache-dbs-snitzsh-redis": {"driver": bridge}}}
+  yaml:
   networks:
-    cache-dbs-snitzsh-redis:
-      driver: bridge
-    dbs-snitzsh-postgres:
-      driver: bridge
+  - dbcache-dbs-snitzsh-redis
 */}}
 {{- define "docker-compose.functions.networks" -}}
   {{- /* args */}}
-  {{- $global := .global -}}
-  {{- $networks := .networks -}}
-  {{- $data_type := .data_type -}}
-  {{- $service_name := .service_name -}}
+  {{- $global := .global }}
+  {{- $networks := .networks }}
+  {{- $data_type := .data_type }}
+  {{- $service_name := .service_name }}
   {{- /* local variables */}}
-  {{- $apps := $global.apps -}}
-  {{- $components := $global.components -}}
-  {{- $obj := dict "networks" (dict) -}}
+  {{- $apps := $global.apps }}
+  {{- $components := $global.components }}
+  {{- $obj := dict "networks" (dict) }}
 
   {{- if gt (len $networks) 0 }}
     {{- range $item := $networks }}
@@ -288,12 +300,12 @@ OUTPUT EXAMPLE:
       {{- end }}
     {{- end }}
   {{- end }}
-
   {{- if gt (len (keys $obj.networks)) 0 }}
     {{- if eq $data_type "object" }}
+      {{- /* TODO: figureout why this if-statement is for */}}
       {{ if not (eq $service_name "all") }}
       {{- end }}
-{{ $obj | toYaml }}
+{{- $obj | toJson }}
     {{- else if eq $data_type "array" }}
       {{- $arr := keys $obj.networks }}
       {{- $obj = dict "networks" $arr }}
@@ -320,19 +332,19 @@ RETURN:
 */}}
 {{- define "docker-compose.functions.service-labels" -}}
   {{- /* args */}}
-  {{- $globals := .globals -}}
-  {{- $software_type := .software_type -}}
-  {{- $component_name := .component_name -}}
-  {{- $app_name := .app_name -}}
-  {{- $project_name := .project_name -}}
+  {{- $globals := .globals }}
+  {{- $software_type := .software_type }}
+  {{- $component_name := .component_name }}
+  {{- $app_name := .app_name }}
+  {{- $project_name := .project_name }}
   {{- $project_obj := .project_obj }}
   {{- /* globals */}}
-  {{- $values := $globals.Values -}}
-  {{- $platform := $values.platform -}}
-  {{- $domain := $values.domain -}}
+  {{- $values := $globals.Values }}
+  {{- $platform := $values.platform }}
+  {{- $domain := $values.domain }}
 
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name -}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
   {{- $labels := list
         (printf "%s.software-type=%s" $domain $software_type)
         (printf "%s.component-name=%s" $domain $component_name)
@@ -340,8 +352,8 @@ RETURN:
         (printf "%s.project-name=%s" $domain $project_name)
         (printf "%s.service-name=%s" $domain $service_name)
         (printf "%s.platform=%s" $domain $platform)
-  -}}
-  {{- if eq $software_type "private" -}}
+  }}
+  {{- if eq $software_type "private" }}
     {{- /*
       TODO:
         - Do we need to implement .env[cluster_type & cluster_cluster] labels?
@@ -349,8 +361,8 @@ RETURN:
     {{- $private_labels := list
           (printf "%s.docker-stage=%s" $domain $project_obj.target)
           (printf "%s.target-script=%s" $domain $project_obj.target_script)
-    -}}
-    {{- $labels = concat $labels $private_labels -}}
+    }}
+    {{- $labels = concat $labels $private_labels }}
   {{- end -}}
 
 labels:
