@@ -335,17 +335,25 @@ OUTPUT
 */}}
 {{- define "docker-compose.functions.depends-on" -}}
   {{- $globals := .globals }}
-  {{- $values := $globals.values }}
+  {{- $values := $globals.Values }}
   {{- $apps := $values.apps }}
   {{- $depends_on := default list .depends_on }}
   {{- $obj := dict "depends_on" (list) }}
   {{- if gt (len $depends_on) 0 }}
-    {{- range $_, $dependency := $depends_on }}
-      {{- $software_type := default "<[project_type_placeholder]>" $dependency.software_type }}
-      {{- $utility_name := default "<[utility_name_placeholder]>" $dependency.utility_name }}
-      {{- $app_name := default "<[app_name_placeholder]>" $dependency.app_name }}
+    {{- range $_, $item := $depends_on }}
+      {{- $splitted := split "." $item }}
+      {{- $software_type := default "<[project_type_placeholder]>" $splitted._0 }}
+      {{- $utility_name := default "<[utility_name_placeholder]>" $splitted._1 }}
+      {{- $app_name := default "<[app_name_placeholder]>" $splitted._2 }}
+      {{- $project_name := default "<[project_name_placeholder]>" $splitted._3 }}
+      {{- $dependency := (dict
+            "software_type" $software_type
+            "utility_name" $utility_name
+            "app_name" $app_name
+            "project_name" $project_name
+          )
+      }}
       {{- if has $app_name $apps }}
-        {{- $project_name := default "<[project_name_placeholder]>" $dependency.project_name }}
         {{- $is_found := include "docker-compose.functions.project-exist" (
               dict
                 "globals" $globals

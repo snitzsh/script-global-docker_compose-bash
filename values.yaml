@@ -90,19 +90,13 @@ components:
           enabled: false
           tag: latest
           depends_on:
-            - software_type: public
-              utility_name: dbs
-              app_name: snitzsh
-              project_name: postgres
+            - public.dbs.snitzsh.postgres
       test:
         pgadmin4:
           enabled: true
           tag: latest
           depends_on:
-            - software_type: public
-              utility_name: dbs
-              app_name: test
-              project_name: postgres
+            - public.dbs.test.postgres
     cache-dbs:
       snitzsh:
         redis:
@@ -115,19 +109,13 @@ components:
           enabled: false
           tag: latest
           depends_on:
-            - software_type: public
-              utility_name: cache-dbs
-              app_name: snitzsh
-              project_name: redis
+            - public.cache-dbs.snitzsh.redis
       test:
         redisinsight:
           enabled: false
           tag: latest
           depends_on:
-            - software_type: public
-              utility_name: cache-dbs
-              app_name: snitzsh
-              project_name: redis
+            - public.cache-dbs.snitzsh.redis
 
   # TODO:
   # - we may need to specify the app, becauce if we change the name form
@@ -157,14 +145,8 @@ components:
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
           depend_on:
-            - software_type: public
-              utility_name: dbs
-              app_name: snitzsh
-              project_name: postgres
-            - software_type: public
-              utility_name: cache-dbs
-              app_name: snitzsh
-              project_name: redis
+            - public.dbs.snitzsh.postgres
+            - public.cache-dbs.snitzsh.redis
       test:
         main-fastify:
           enabled: false
@@ -185,14 +167,8 @@ components:
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
           depend_on:
-            - software_type: public
-              utility_name: dbs
-              app_name: test
-              project_name: postgres
-            - software_type: public
-              utility_name: cache-dbs
-              app_name: test
-              project_name: redis
+            - public.dbs.test.postgres
+            - public.cache-dbs.test.redis
     uis:
       snitzsh:
         main-vue:
@@ -208,10 +184,7 @@ components:
           host: "0.0.0.0"
           port: "8080" # this will be dynamic handled by helm
           depends_on: # in case it depends on other component.
-            - software_type: private
-              utility_name: apis
-              app_name: snitzsh
-              project_name: main-rust
+            - private.apis.snitzsh.main-rust
       test:
         main-vue:
           enabled: false
@@ -226,10 +199,7 @@ components:
           host: "0.0.0.0"
           port: "8080" # this will be dynamic handled by helm
           depends_on: # in case it depends on other component.
-            - software_type: private
-              utility_name: apis
-              app_name: test
-              project_name: main-fastify
+            - private.apis.test.main-fastify
 
 docker:
   volumes: true
