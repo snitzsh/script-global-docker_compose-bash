@@ -143,7 +143,7 @@ depends_on:
   {{- $global := .global }}
   {{- $components := $global.components }}
   {{- $app_name := .app_name }}
-  {{- $depends_on := .depends_on }}
+  {{- $depends_on := default list .depends_on }}
   {{- $obj := dict "depends_on" (list) }}
   {{- $all_app_services := dict }}
   {{- $merged_app_services := dict }}
@@ -181,8 +181,6 @@ depends_on:
       the function, else indent.
   */}}
   {{ $obj | toJson }}
-  {{- if gt (len $obj.depends_on) 0 }}
-  {{- end }}
 {{- end }}
 
 {{- /*
@@ -368,4 +366,116 @@ RETURN:
     {{- $labels = concat $labels $private_labels }}
   {{- end }}
   {{ (dict "labels" $labels) | toJson }}
+{{- end }}
+
+{{- /*
+TODO:
+  - null
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - null
+
+ARGS:
+  - global = {}
+  - dependency = {}
+
+RETURN:
+  - boolean
+
+OUTPUT
+  - true | false
+*/}}
+{{- define "docker-compose.functions.project" -}}
+  {{- $globals := .globals }}
+  {{- $values := $globals.Values }}
+  {{- $components := $values.components }}
+  {{- $dependency := .dependency  }}
+  {{- $software_type := $dependency.software_type }}
+  {{- $utility_name := $dependency.utility_name }}
+  {{- $app_name := $dependency.app_name }}
+  {{- $project_name := $dependency.project_name }}
+  {{- $found := dict "found" false }}
+
+  {{- $software_exit := hasKey $components $software_type }}
+  {{- if $software_exit }}
+    {{- $software_obj := get $components $software_type }}
+    {{- $utility_exit := hasKey $software_obj $utility_name }}
+    {{- if $utility_exit }}
+      {{- $utility_obj := get $software_obj $utility_name }}
+      {{- $app_exist := hasKey $utility_obj $app_name }}
+      {{- if $app_exist }}
+        {{- $app_obj := get $utility_obj $app_name }}
+        {{- $project_exit := hasKey $app_obj $project_name }}
+        {{- if $project_exit }}
+          {{- $project_obj := get $app_obj $project_name}}
+          {{- $is_enabled := $project_obj.enabled }}
+          {{- if $is_enabled }}
+            {{- $found = merge $found (
+                  dict
+                    "found" true
+                )
+            }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{ $found | toJson }}
+{{- end }}
+
+{{- /*
+TODO:
+  - null
+
+NOTE:
+  - `item.software_type` is not returned as part of string in array's item.
+
+DESCRIPTION:
+  - Sanitizes the each item object [..., {"software_type": "a", utility_name: "b", app_name: "c", project_name: "d"}, ...]
+    to return [..., "", ...]
+
+ARGS:
+  - .globals
+  - .depends_on = [{}, {}]
+
+RETURN:
+  - array
+
+OUTPUT
+[..., "b-c-d",...]
+
+*/}}
+{{- define "docker-compose.functions.depends-on" -}}
+  {{- $globals := .globals }}
+  {{- $depends_on := default list .depends_on }}
+  {{- $obj := dict "depends_on" (list) }}
+  {{- if gt (len $depends_on) 0 }}
+    {{- range $_, $dependency := $depends_on }}
+      {{- $software_type := default "<[project_type_placeholder]>" $dependency.software_type }}
+      {{- $utility_name := default "<[utility_name_placeholder]>" $dependency.utility_name }}
+      {{- $app_name := default "<[app_name_placeholder]>" $dependency.app_name }}
+      {{- $project_name := default "<[project_name_placeholder]>" $dependency.project_name }}
+      {{- $is_found := include "docker-compose.functions.project" (
+            dict
+              "globals" $globals
+              "dependency" $dependency
+          ) | fromJson
+      }}
+      {{- if $is_found.found }}
+        {{- $obj = merge $obj (
+              dict
+                "depends_on" (
+                  append $obj.depends_on (
+                    printf "%s-%s-%s" $utility_name $app_name $project_name
+                  )
+                )
+            )
+        }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{ $obj | toJson }}
 {{- end }}

@@ -23,10 +23,17 @@ TODO:
   {{- $path := $project_obj.path }}
   {{- $workdir := $project_obj._workdir }}
   {{- $tag := $project_obj.tag }}
+  {{- $depends_on := $project_obj.depends_on }}
   {{- /* local variables */}}
   {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
   {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name }}
   {{- /* imported modules */}}
+  {{- $depends_on_2 := include "docker-compose.functions.depends-on" (
+        dict
+          "globals" $globals
+          "depends_on" $depends_on
+      ) | fromJson | toYaml | nindent 2
+  }}
   {{- $service_labels := (
         include "docker-compose.functions.service-labels" .
       ) | fromJson | toYaml | nindent 2
@@ -62,5 +69,6 @@ TODO:
     - "6379:6379"
   command: "redis-server --save 20 1 --loglevel warning --requirepass {{ $values.auth.password }}"
   {{ $networks }}
+  {{ $depends_on_2 }}
   {{- end }}
 {{- end }}
