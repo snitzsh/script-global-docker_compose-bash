@@ -49,8 +49,7 @@ services:
       dockerfile: Dockerfile
       target: dev-stage
     container_name: uis-snitzsh-main-vue
-    depends_on:
-    - apis-snitzsh-main-rust
+    depends_on: []
     environment: {}
     hostname: uis-snitzsh-main-vue
     image: uis-snitzsh-main-vue:latest

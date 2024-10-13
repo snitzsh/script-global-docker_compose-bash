@@ -35,31 +35,33 @@ RETURN:
       }}
       {{- /* loops: apps */}}
       {{- range $app_name, $app_obj := $component_obj }}
-        {{- /* loops: projects */}}
-        {{- range $project_name, $project_obj := $app_obj }}
-          {{- if $project_obj.enabled }}
-            {{- $app_services = merge $app_services (
-                  include (printf "%s.%s" $.Chart.Name $project_name) (
+        {{- if has $app_name $apps }}
+          {{- /* loops: projects */}}
+          {{- range $project_name, $project_obj := $app_obj }}
+            {{- if $project_obj.enabled }}
+              {{- $app_services = merge $app_services (
+                    include (printf "%s.%s" $.Chart.Name $project_name) (
+                      dict
+                        "globals" $
+                        "software_type" $software_type
+                        "component_name" $component_name
+                        "app_name" $app_name
+                        "project_name" $project_name
+                        "project_obj" $project_obj
+                    ) | fromYaml
+                  )
+              }}
+              {{- $all_app_services = merge $all_app_services (
                     dict
-                      "globals" $
-                      "software_type" $software_type
-                      "component_name" $component_name
-                      "app_name" $app_name
-                      "project_name" $project_name
-                      "project_obj" $project_obj
-                  ) | fromYaml
-                )
-            }}
-            {{- $all_app_services = merge $all_app_services (
-                  dict
-                    $component_name $app_services
-                )
-            }}
-            {{- $merged_app_services = merge $merged_app_services (
-                  dict
-                    $component_name $app_services
-                )
-            }}
+                      $component_name $app_services
+                  )
+              }}
+              {{- $merged_app_services = merge $merged_app_services (
+                    dict
+                      $component_name $app_services
+                  )
+              }}
+            {{- end }}
           {{- end }}
         {{- end }}
       {{- end }}
@@ -118,73 +120,6 @@ services:
 
 {{- /*
 TODO:
-  - return {depend_on: - dbs-snitzsh-postgres} for db-uis-test-pgadmin4, instead
-    of dbs-test-postgres
-
-NOTE:
-  - Read `IMPORTANT` comment (inside the function) to prevent issues.
-
-DESCRIPTION:
-  - Handles `depends_on` for a component.
-
-ARGS:
-  - $global = .Values
-  - $depends_on = [..., component_1, component_2, ...]
-
-RETURN:
-  - `{ depends_on: [ ..., component_1, component_2, ... ] }` or `Null`
-
-OUTPUT EXAMPLE:
-depends_on:
-- dbs-snitzsh-postgres
-
-*/}}
-{{- define "docker-compose.functions.depends_on" -}}
-  {{- $global := .global }}
-  {{- $components := $global.components }}
-  {{- $app_name := .app_name }}
-  {{- $depends_on := default list .depends_on }}
-  {{- $obj := dict "depends_on" (list) }}
-  {{- $all_app_services := dict }}
-  {{- $merged_app_services := dict }}
-
-  {{- if gt (len $depends_on) 0 }}
-    {{- range $item := $depends_on }}
-      {{- /* loops: public, private */}}
-      {{- range $software_type, $software_type_obj := $components }}
-        {{- /* loops components (inside components main_object) */}}
-        {{- range $component_name, $component_obj := $software_type_obj }}
-          {{- /* loops apps */}}
-          {{- range $app_name_2, $app_obj := $component_obj }}
-            {{- /* loops: projects */}}
-            {{- range $project_name, $project_obj := $app_obj }}
-              {{- if and ($project_obj.enabled) (eq $item $project_name) }}
-                {{- $obj = merge $obj (
-                      dict
-                        "depends_on" (
-                          append $obj.depends_on (
-                            printf "%s-%s-%s" $component_name $app_name $project_name
-                          )
-                        )
-                    )
-                }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{- /*
-  IMPORTANT:
-    - Do not indent the below code. You must assign it to a variable when calling
-      the function, else indent.
-  */}}
-  {{ $obj | toJson }}
-{{- end }}
-
-{{- /*
-TODO:
   - null
 
 NOTE:
@@ -215,16 +150,18 @@ OUTPUT EXAMPLE:
     {{- range $component_name, $component_obj := $software_type_obj }}
       {{- /* loops apps */}}
       {{- range $app_name, $app_obj := $component_obj }}
-        {{- /* loops: projects */}}
-        {{- range $project_name, $project_obj := $app_obj }}
-          {{- if $project_obj.enabled }}
-            {{- $volume :=  dict
-                  (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "local")
-            }}
-            {{- $volumes = merge $volumes (
-                  dict "volumes" $volume
-                )
-            }}
+        {{- if has $app_name $apps }}
+          {{- /* loops: projects */}}
+          {{- range $project_name, $project_obj := $app_obj }}
+            {{- if $project_obj.enabled }}
+              {{- $volume :=  dict
+                    (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "local")
+              }}
+              {{- $volumes = merge $volumes (
+                    dict "volumes" $volume
+                  )
+              }}
+            {{- end }}
           {{- end }}
         {{- end }}
       {{- end }}
@@ -233,6 +170,10 @@ OUTPUT EXAMPLE:
   {{- if gt (len (keys $volumes.volumes)) 0 }}
     {{ $volumes | toJson }}
   {{- end }}
+{{- end }}
+
+{{- define "docker-compose.functions.normalize-networks" -}}
+  
 {{- end }}
 
 {{- /*
@@ -283,17 +224,19 @@ OUTPUT EXAMPLE:
         {{- range $component_name, $component_obj := $software_type_obj }}
           {{- /* loops apps */}}
           {{- range $app_name, $app_obj := $component_obj }}
-            {{- /* loops: projects */}}
-            {{- range $project_name, $project_obj := $app_obj }}
-              {{- if and ($project_obj.enabled) (eq $item $project_name) }}
-                {{- $network :=  dict
-                      (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "bridge")
-                }}
-                {{- $obj = merge $obj (
-                      dict
-                        "networks" $network
-                    )
-                }}
+            {{- if has $app_name $apps }}
+              {{- /* loops: projects */}}
+              {{- range $project_name, $project_obj := $app_obj }}
+                {{- if and ($project_obj.enabled) (eq $item $project_name) }}
+                  {{- $network :=  dict
+                        (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "bridge")
+                  }}
+                  {{- $obj = merge $obj (
+                        dict
+                          "networks" $network
+                      )
+                  }}
+                {{- end }}
               {{- end }}
             {{- end }}
           {{- end }}
@@ -373,6 +316,64 @@ TODO:
   - null
 
 NOTE:
+  - `item.software_type` is not returned as part of string in array's item.
+
+DESCRIPTION:
+  - Sanitizes the each item object [..., {"software_type": "a", utility_name: "b", app_name: "c", project_name: "d"}, ...]
+    to return [..., "", ...]
+
+ARGS:
+  - .globals
+  - .depends_on = [{}, {}]
+
+RETURN:
+  - array
+
+OUTPUT
+[..., "b-c-d",...]
+
+*/}}
+{{- define "docker-compose.functions.depends-on" -}}
+  {{- $globals := .globals }}
+  {{- $values := $globals.values }}
+  {{- $apps := $values.apps }}
+  {{- $depends_on := default list .depends_on }}
+  {{- $obj := dict "depends_on" (list) }}
+  {{- if gt (len $depends_on) 0 }}
+    {{- range $_, $dependency := $depends_on }}
+      {{- $software_type := default "<[project_type_placeholder]>" $dependency.software_type }}
+      {{- $utility_name := default "<[utility_name_placeholder]>" $dependency.utility_name }}
+      {{- $app_name := default "<[app_name_placeholder]>" $dependency.app_name }}
+      {{- if has $app_name $apps }}
+        {{- $project_name := default "<[project_name_placeholder]>" $dependency.project_name }}
+        {{- $is_found := include "docker-compose.functions.project-exist" (
+              dict
+                "globals" $globals
+                "dependency" $dependency
+            ) | fromJson
+        }}
+        {{- if $is_found.found }}
+          {{- $obj = merge $obj (
+                dict
+                  "depends_on" (
+                    append $obj.depends_on (
+                      printf "%s-%s-%s" $utility_name $app_name $project_name
+                    )
+                  )
+              )
+          }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{ $obj | toJson }}
+{{- end }}
+
+{{- /*
+TODO:
+  - null
+
+NOTE:
   - null
 
 DESCRIPTION:
@@ -388,7 +389,7 @@ RETURN:
 OUTPUT
   - true | false
 */}}
-{{- define "docker-compose.functions.project" -}}
+{{- define "docker-compose.functions.project-exist" -}}
   {{- $globals := .globals }}
   {{- $values := $globals.Values }}
   {{- $components := $values.components }}
@@ -424,58 +425,4 @@ OUTPUT
     {{- end }}
   {{- end }}
   {{ $found | toJson }}
-{{- end }}
-
-{{- /*
-TODO:
-  - null
-
-NOTE:
-  - `item.software_type` is not returned as part of string in array's item.
-
-DESCRIPTION:
-  - Sanitizes the each item object [..., {"software_type": "a", utility_name: "b", app_name: "c", project_name: "d"}, ...]
-    to return [..., "", ...]
-
-ARGS:
-  - .globals
-  - .depends_on = [{}, {}]
-
-RETURN:
-  - array
-
-OUTPUT
-[..., "b-c-d",...]
-
-*/}}
-{{- define "docker-compose.functions.depends-on" -}}
-  {{- $globals := .globals }}
-  {{- $depends_on := default list .depends_on }}
-  {{- $obj := dict "depends_on" (list) }}
-  {{- if gt (len $depends_on) 0 }}
-    {{- range $_, $dependency := $depends_on }}
-      {{- $software_type := default "<[project_type_placeholder]>" $dependency.software_type }}
-      {{- $utility_name := default "<[utility_name_placeholder]>" $dependency.utility_name }}
-      {{- $app_name := default "<[app_name_placeholder]>" $dependency.app_name }}
-      {{- $project_name := default "<[project_name_placeholder]>" $dependency.project_name }}
-      {{- $is_found := include "docker-compose.functions.project" (
-            dict
-              "globals" $globals
-              "dependency" $dependency
-          ) | fromJson
-      }}
-      {{- if $is_found.found }}
-        {{- $obj = merge $obj (
-              dict
-                "depends_on" (
-                  append $obj.depends_on (
-                    printf "%s-%s-%s" $utility_name $app_name $project_name
-                  )
-                )
-            )
-        }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{ $obj | toJson }}
 {{- end }}

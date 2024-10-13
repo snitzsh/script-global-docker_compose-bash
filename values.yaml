@@ -35,19 +35,6 @@ domain: "com.docker.compose"
 # false : it creates a container
 image_only: false
 
-# TODO:
-#   - add support for this property
-#   - if true it should only create one db and the app should handle creating a
-#     database for each app
-#
-share_db: false
-# TODO:
-#   - add support for this property
-#   - if true it should only create one db and the app should handle creating a
-#     database for each app
-#
-share_cache_db: false
-
 #
 # TODO:
 #   - fully support this prop.
@@ -109,7 +96,7 @@ components:
               project_name: postgres
       test:
         pgadmin4:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on:
             - software_type: public
@@ -132,15 +119,15 @@ components:
               utility_name: cache-dbs
               app_name: snitzsh
               project_name: redis
-      # test:
-      #   redisinsight:
-      #     enabled: false
-      #     tag: latest
-      #     depends_on:
-      #       - software_type: public
-      #         utility_name: cache-dbs
-      #         app_name: snitzsh
-      #         project_name: redis
+      test:
+        redisinsight:
+          enabled: false
+          tag: latest
+          depends_on:
+            - software_type: public
+              utility_name: cache-dbs
+              app_name: snitzsh
+              project_name: redis
 
   # TODO:
   # - we may need to specify the app, becauce if we change the name form
