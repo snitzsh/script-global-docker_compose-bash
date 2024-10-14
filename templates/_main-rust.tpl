@@ -34,6 +34,13 @@ TODO:
         include "docker-compose.functions.service-labels" .
       ) | fromJson | toYaml | nindent 2
   }}
+  {{- $networks := include "docker-compose.functions.normalize-networks" (
+        dict
+          "globals" $globals
+          "app_name" $app_name
+          "data_type" "list"
+      ) | fromJson | toYaml | nindent 2
+  }}
 
 {{ $service_name }}:
   build:
@@ -67,6 +74,7 @@ TODO:
   {{ $service_labels }}
   ports:
     - '3000:3000'
+  {{ $networks }}
   {{ $depends_on_2 }}
   {{- /*
   command: api-rust

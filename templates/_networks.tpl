@@ -23,6 +23,8 @@ OUTPUT EXAMPLE:
 {{- define "docker-compose.networks" -}}
 {{- $globals := .globals }}
 {{- $service_name := .service_name }}
+{{- /*
+*/}}
 {{- $networks := include "docker-compose.functions.networks" (
       dict
         "global" $globals.Values
@@ -31,5 +33,6 @@ OUTPUT EXAMPLE:
         "service_name" $service_name
     ) | fromJson
 }}
+
 {{ $networks | toJson }}
 {{- end }}

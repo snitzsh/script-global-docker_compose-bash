@@ -35,11 +35,11 @@ TODO:
         include "docker-compose.functions.service-labels" .
       ) | fromJson | toYaml | nindent 2
   }}
-  {{- $networks := include "docker-compose.functions.networks" (
+  {{- $networks := include "docker-compose.functions.normalize-networks" (
         dict
-          "global" $values
-          "networks" (list "redis")
-          "data_type" "array"
+          "globals" $globals
+          "app_name" $app_name
+          "data_type" "list"
       ) | fromJson | toYaml | nindent 2
   }}
 

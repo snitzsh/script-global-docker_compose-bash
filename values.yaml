@@ -25,8 +25,11 @@
 
 docker_compose_version: "TODO"
 
+# IMPORRANT:
+#   - name cannot be the same as software, utility, project.
 apps:
   - snitzsh
+  - test
 
 user: "" # user that executed this scripts: gitlab pipeline
 domain: "com.docker.compose"
@@ -41,7 +44,7 @@ image_only: false
 # NOTE:
 #   - if `true`, it creates documents in docker-compose.yaml
 #
-merge_apps: true
+merge_apps: false
 
 # NOTE:
 #   - if `merge_apps: true`, it will use this name for the apps. in docker desktop
@@ -76,18 +79,18 @@ components:
     dbs:
       snitzsh:
         postgres:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on: []
       test:
         postgres:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on: []
     db-uis:
       snitzsh:
         pgadmin4:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on:
             - public.dbs.snitzsh.postgres
@@ -100,19 +103,19 @@ components:
     cache-dbs:
       snitzsh:
         redis:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on: []
     cache-db-uis:
       snitzsh:
         redisinsight:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on:
             - public.cache-dbs.snitzsh.redis
       test:
         redisinsight:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on:
             - public.cache-dbs.snitzsh.redis
@@ -149,7 +152,7 @@ components:
             - public.cache-dbs.snitzsh.redis
       test:
         main-fastify:
-          enabled: false
+          enabled: true
           # Path to the project inside ./snitzsh
           # (assuming you use boilerplate to pull repositories)
           path: "../../../"
@@ -187,7 +190,7 @@ components:
             - private.apis.snitzsh.main-rust
       test:
         main-vue:
-          enabled: false
+          enabled: true
           path: "../../../"
           template:
             language: "vue"

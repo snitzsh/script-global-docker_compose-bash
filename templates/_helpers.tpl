@@ -85,10 +85,10 @@ services:
 {{- include "docker-compose.volumes" $ | fromJson | toYaml | nindent 0 }}
         {{- end }}
         {{- if $docker.networks }}
-{{- include "docker-compose.networks" (
+{{- include "docker-compose.functions.normalize-networks" (
       dict
         "globals" $
-        "service_name" "all"
+        "data_type" "dict"
     ) | fromJson | toYaml | nindent 0
 }}
         {{- end }}
@@ -96,19 +96,37 @@ services:
     {{- end }}
   {{- /* Multiple apps on its own docker image */}}
   {{- else }}
-    {{- range $key, $services := $all_app_services }}
-name: {{ $key }}
+    {{- range $_, $app_name_2 := $apps }}
+name: {{ $app_name_2 }}
 services:
-  {{- $services | toYaml | nindent 2 }}
+      {{- /*
+        TODO:
+          - Need to fix why it will output a lot of application.
+            it should separate file for test and snitzsh.
+            maybe I need to create a new object here. Or on the main loop above.
+      */}}
+      {{- $active_service_name := "" }}
+      {{- range $key, $services := $all_app_services }}
+        {{- $service_keys := keys $services }}
+        {{- range $_, $service_name := $service_keys }}
+          {{- if contains $app_name_2 $service_name }}
+            {{- $active_service_name = $service_name }}
+          {{- end }}
+        {{- end }}
+      {{- if gt (len $active_service_name) 0 }}
+{{- $services | toYaml | nindent 2 }}
+      {{- end }}
+      {{- end }}
       {{- if not $image_only }}
         {{- if $docker.volumes }}
 {{- include "docker-compose.volumes" $ | fromJson | toYaml | nindent 0 }}
         {{- end }}
         {{- if $docker.networks }}
-{{- include "docker-compose.networks" (
+{{- include "docker-compose.functions.normalize-networks" (
       dict
         "globals" $
-        "service_name" (first (keys $services))
+        "app_name" $app_name_2
+        "data_type" "dict"
     ) | fromJson | toYaml | nindent 0
 }}
         {{- end }}
@@ -117,63 +135,74 @@ services:
     {{- end }}
   {{- end }}
 {{- end }}
-
 {{- /*
 TODO:
-  - null
+  - Find out how to fix the issue where it creates all volumes when
+    `merge_apps=false` it should create a network per
+    `<[component_name]-<[app_name]>-<[project_name]>`.
+    It already create all when `merge_apps=true`.
 
 NOTE:
   - null
 
 DESCRIPTION:
-  - Creates a `volume` for a component.
+  - null
 
 ARGS:
-  - $global = .Values
+  - $global: dict
+  - networks: list
+  - data_type: string
+  - service_name: string
 
 RETURN:
-  - `{volumes: {<[component-name]>: driver: <[name]> }}` or `Null`
+  - null
 
 OUTPUT EXAMPLE:
-  volumes:
-    cache-db-uis-<[app_name]>-<image_name>:
-      driver: local
+  - null
 */}}
-{{- define "docker-compose.functions.volumes" -}}
-  {{- $global := .global }}
-  {{- $components := $global.components }}
-  {{- $apps := $global.apps }}
-  {{- $volumes := dict "volumes" (dict) }}
-  {{- /* loops: public, private */}}
-  {{- range $software_type, $software_type_obj := $components }}
-    {{- /* loops components (inside components main_object) */}}
-    {{- range $component_name, $component_obj := $software_type_obj }}
-      {{- /* loops apps */}}
-      {{- range $app_name, $app_obj := $component_obj }}
-        {{- if has $app_name $apps }}
-          {{- /* loops: projects */}}
-          {{- range $project_name, $project_obj := $app_obj }}
-            {{- if $project_obj.enabled }}
-              {{- $volume :=  dict
-                    (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "local")
-              }}
-              {{- $volumes = merge $volumes (
-                    dict "volumes" $volume
-                  )
-              }}
-            {{- end }}
-          {{- end }}
-        {{- end }}
+{{- define "docker-compose.functions.normalize-networks" -}}
+  {{- $globals := .globals }}
+  {{- $values := $globals.Values }}
+  {{- $apps := $values.apps }}
+  {{- $merge_apps := $values.merge_apps }}
+  {{- $default_app_name := $values.default_app_name }}
+  {{- $app_name_2 := default nil .app_name }}
+  {{- $obj := dict "networks" (dict) }}
+  {{- $data_type := default "list" .data_type }}
+  {{- if $merge_apps }}
+    {{- $network :=  dict
+        (printf "%s" $default_app_name ) (dict "driver" "bridge")
+    }}
+    {{- $obj = merge $obj (
+          dict
+            "networks" $network
+        )
+    }}
+  {{- else }}
+    {{- range $_, $app_name := $apps }}
+      {{- if eq $app_name $app_name_2  }}
+        {{- $network :=  dict
+            (printf "%s" $app_name) (dict "driver" "bridge")
+        }}
+        {{- $obj = merge $obj (
+              dict
+                "networks" $network
+            )
+        }}
       {{- end }}
     {{- end }}
   {{- end }}
-  {{- if gt (len (keys $volumes.volumes)) 0 }}
-    {{ $volumes | toJson }}
-  {{- end }}
-{{- end }}
 
-{{- define "docker-compose.functions.normalize-networks" -}}
-  
+  {{- if gt (len (keys $obj.networks)) 0 }}
+    {{- if eq $data_type "dict" }}
+      {{ $obj | toJson }}
+    {{- else if eq $data_type "list" }}
+      {{- /**/}}
+      {{- $arr := keys $obj.networks }}
+      {{- $obj = dict "networks" $arr }}
+      {{ $obj | toJson }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 
 {{- /*
@@ -246,15 +275,67 @@ OUTPUT EXAMPLE:
   {{- end }}
   {{- if gt (len (keys $obj.networks)) 0 }}
     {{- if eq $data_type "object" }}
-      {{- /* TODO: figureout why this if-statement is for */}}
-      {{ if not (eq $service_name "all") }}
-      {{- end }}
       {{ $obj | toJson }}
     {{- else if eq $data_type "array" }}
       {{- $arr := keys $obj.networks }}
       {{- $obj = dict "networks" $arr }}
       {{ $obj | toJson }}
     {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- /*
+TODO:
+  - if merged_apps is false, it still create multiple volumes for each service,
+    it should only create one per service.
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Creates a `volume` for a component.
+
+ARGS:
+  - $global = .Values
+
+RETURN:
+  - `{volumes: {<[component-name]>: driver: <[name]> }}` or `Null`
+
+OUTPUT EXAMPLE:
+  volumes:
+    cache-db-uis-<[app_name]>-<image_name>:
+      driver: local
+*/}}
+{{- define "docker-compose.functions.volumes" -}}
+  {{- $global := .global }}
+  {{- $components := $global.components }}
+  {{- $apps := $global.apps }}
+  {{- $volumes := dict "volumes" (dict) }}
+  {{- /* loops: public, private */}}
+  {{- range $software_type, $software_type_obj := $components }}
+    {{- /* loops components (inside components main_object) */}}
+    {{- range $component_name, $component_obj := $software_type_obj }}
+      {{- /* loops apps */}}
+      {{- range $app_name, $app_obj := $component_obj }}
+        {{- if has $app_name $apps }}
+          {{- /* loops: projects */}}
+          {{- range $project_name, $project_obj := $app_obj }}
+            {{- if $project_obj.enabled }}
+              {{- $volume :=  dict
+                    (printf "%s-%s-%s" $component_name $app_name $project_name) (dict "driver" "local")
+              }}
+              {{- $volumes = merge $volumes (
+                    dict "volumes" $volume
+                  )
+              }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if gt (len (keys $volumes.volumes)) 0 }}
+    {{ $volumes | toJson }}
   {{- end }}
 {{- end }}
 

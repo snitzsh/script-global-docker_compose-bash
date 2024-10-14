@@ -20,6 +20,9 @@ TODO:
   {{- $workdir := $project_obj._workdir }}
   {{- $tag := $project_obj.tag }}
   {{- $depends_on := $project_obj.depends_on }}
+  {{- /* local variables */}}
+  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
+  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name }}
   {{- /* imported modules */}}
   {{- $depends_on_2 := include "docker-compose.functions.depends-on" (
         dict
@@ -27,11 +30,15 @@ TODO:
           "depends_on" $depends_on
       ) | fromJson | toYaml | nindent 2
   }}
-  {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
-  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name }}
   {{- $service_labels := (
         include "docker-compose.functions.service-labels" .
+      ) | fromJson | toYaml | nindent 2
+  }}
+  {{- $networks := include "docker-compose.functions.normalize-networks" (
+        dict
+          "globals" $globals
+          "app_name" $app_name
+          "data_type" "list"
       ) | fromJson | toYaml | nindent 2
   }}
 
@@ -71,6 +78,7 @@ TODO:
   {{ $service_labels }}
   ports:
     - "8080:8080"
+  {{ $networks }}
   {{ $depends_on_2 }}
   {{- /*
     expose:

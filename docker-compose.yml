@@ -1,6 +1,6 @@
 ---
 # Source: docker-compose/templates/main.yaml
-name: platform
+name: snitzsh
 services:
   apis-snitzsh-main-rust:
     build:
@@ -28,6 +28,8 @@ services:
     - com.docker.compose.platform=linux/arm64
     - com.docker.compose.docker-stage=dev-stage
     - com.docker.compose.target-script=dev
+    networks:
+    - snitzsh
     platform: linux/arm64
     ports:
     - 3000:3000
@@ -36,6 +38,227 @@ services:
     tty: true
     volumes:
     - ../../../apis/snitzsh/main-rust:/app
+  apis-test-main-fastify:
+    build:
+      args:
+        _WORKDIR: /app
+        RUST_APP_PLATFORM_CLUSTER_NAME: dev
+        RUST_APP_PLATFORM_CLUSTER_TYPE: local
+        RUST_APP_PLATFORM_HOST: 0.0.0.0
+        RUST_APP_PLATFORM_PORT: "3000"
+        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../apis/test/main-fastify
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: apis-test-main-fastify
+    depends_on: []
+    environment: {}
+    hostname: apis-test-main-fastify
+    image: apis-test-main-fastify:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=apis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=main-fastify
+    - com.docker.compose.service-name=apis-test-main-fastify
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 3000:3000
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../apis/test/main-fastify:/app
+  cache-db-uis-snitzsh-redisinsight:
+    container_name: cache-db-uis-snitzsh-redisinsight
+    depends_on: []
+    environment: {}
+    hostname: cache-db-uis-snitzsh-redisinsight
+    image: redislabs/redisinsight:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redisinsight
+    - com.docker.compose.service-name=cache-db-uis-snitzsh-redisinsight
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5540:5540
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-db-uis-snitzsh-redisinsight:/db
+  cache-db-uis-test-redisinsight:
+    container_name: cache-db-uis-test-redisinsight
+    depends_on: []
+    environment: {}
+    hostname: cache-db-uis-test-redisinsight
+    image: redislabs/redisinsight:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-db-uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=redisinsight
+    - com.docker.compose.service-name=cache-db-uis-test-redisinsight
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 5540:5540
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-db-uis-test-redisinsight:/db
+  cache-dbs-snitzsh-redis:
+    command: redis-server --save 20 1 --loglevel warning --requirepass root
+    container_name: cache-dbs-snitzsh-redis
+    depends_on: []
+    environment:
+      REDIS_USERNAME: root
+    expose:
+    - "6379"
+    hostname: cache-dbs-snitzsh-redis
+    image: redis:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-dbs
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redis
+    - com.docker.compose.service-name=cache-dbs-snitzsh-redis
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 6379:6379
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-dbs-snitzsh-redis/data:/data
+  db-uis-snitzsh-pgadmin4:
+    container_name: db-uis-snitzsh-pgadmin4
+    depends_on: []
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    expose:
+    - "80"
+    hostname: db-uis-snitzsh-pgadmin4
+    image: dpage/pgadmin4:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=pgadmin4
+    - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5050:80
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/db-uis-snitzsh-pgadmin4:/var/lib/pgadmin
+  db-uis-test-pgadmin4:
+    container_name: db-uis-test-pgadmin4
+    depends_on: []
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    expose:
+    - "80"
+    hostname: db-uis-test-pgadmin4
+    image: dpage/pgadmin4:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=pgadmin4
+    - com.docker.compose.service-name=db-uis-test-pgadmin4
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 5050:80
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/db-uis-test-pgadmin4:/var/lib/pgadmin
+  dbs-snitzsh-postgres:
+    container_name: dbs-snitzsh-postgres
+    depends_on: []
+    environment:
+      POSTGRES_DB: snitzsh_db
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
+    expose:
+    - "5432"
+    hostname: dbs-snitzsh-postgres
+    image: postgres:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=dbs
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=postgres
+    - com.docker.compose.service-name=dbs-snitzsh-postgres
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5432:5432
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/dbs-snitzsh-postgres/data:/var/lib/postgresql/data
+    - ./volumes/dbs-snitzsh-postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+  dbs-test-postgres:
+    container_name: dbs-test-postgres
+    depends_on: []
+    environment:
+      POSTGRES_DB: snitzsh_db
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
+    expose:
+    - "5432"
+    hostname: dbs-test-postgres
+    image: postgres:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=dbs
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=postgres
+    - com.docker.compose.service-name=dbs-test-postgres
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 5432:5432
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/dbs-test-postgres/data:/var/lib/postgresql/data
+    - ./volumes/dbs-test-postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
   uis-snitzsh-main-vue:
     build:
       args:
@@ -63,6 +286,8 @@ services:
     - com.docker.compose.platform=linux/arm64
     - com.docker.compose.docker-stage=dev-stage
     - com.docker.compose.target-script=dev
+    networks:
+    - snitzsh
     platform: linux/arm64
     ports:
     - 8080:8080
@@ -71,9 +296,427 @@ services:
     tty: true
     volumes:
     - ../../../uis/snitzsh/main-vue/src:/app/src
+  uis-test-main-vue:
+    build:
+      args:
+        _WORKDIR: /app
+        VITE_APP_PLATFORM_CLUSTER_NAME: dev
+        VITE_APP_PLATFORM_CLUSTER_TYPE: local
+        VITE_APP_PLATFORM_HOST: 0.0.0.0
+        VITE_APP_PLATFORM_PORT: "8080"
+        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../uis/test/main-vue
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: uis-test-main-vue
+    depends_on:
+    - apis-test-main-fastify
+    environment: {}
+    hostname: uis-test-main-vue
+    image: uis-test-main-vue:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=main-vue
+    - com.docker.compose.service-name=uis-test-main-vue
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 8080:8080
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../uis/test/main-vue/src:/app/src
 volumes:
   apis-snitzsh-main-rust:
     driver: local
+  apis-test-main-fastify:
+    driver: local
+  cache-db-uis-snitzsh-redisinsight:
+    driver: local
+  cache-db-uis-test-redisinsight:
+    driver: local
+  cache-dbs-snitzsh-redis:
+    driver: local
+  db-uis-snitzsh-pgadmin4:
+    driver: local
+  db-uis-test-pgadmin4:
+    driver: local
+  dbs-snitzsh-postgres:
+    driver: local
+  dbs-test-postgres:
+    driver: local
   uis-snitzsh-main-vue:
     driver: local
-Error: unexpected end of JSON input
+  uis-test-main-vue:
+    driver: local
+networks:
+  snitzsh:
+    driver: bridge
+---
+# Source: docker-compose/templates/main.yaml
+name: test
+services:
+  apis-snitzsh-main-rust:
+    build:
+      args:
+        _WORKDIR: /app
+        RUST_APP_PLATFORM_CLUSTER_NAME: dev
+        RUST_APP_PLATFORM_CLUSTER_TYPE: local
+        RUST_APP_PLATFORM_HOST: 0.0.0.0
+        RUST_APP_PLATFORM_PORT: "3000"
+        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../apis/snitzsh/main-rust
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: apis-snitzsh-main-rust
+    depends_on: []
+    environment: {}
+    hostname: apis-snitzsh-main-rust
+    image: apis-snitzsh-main-rust:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=apis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=main-rust
+    - com.docker.compose.service-name=apis-snitzsh-main-rust
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 3000:3000
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../apis/snitzsh/main-rust:/app
+  apis-test-main-fastify:
+    build:
+      args:
+        _WORKDIR: /app
+        RUST_APP_PLATFORM_CLUSTER_NAME: dev
+        RUST_APP_PLATFORM_CLUSTER_TYPE: local
+        RUST_APP_PLATFORM_HOST: 0.0.0.0
+        RUST_APP_PLATFORM_PORT: "3000"
+        RUST_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../apis/test/main-fastify
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: apis-test-main-fastify
+    depends_on: []
+    environment: {}
+    hostname: apis-test-main-fastify
+    image: apis-test-main-fastify:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=apis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=main-fastify
+    - com.docker.compose.service-name=apis-test-main-fastify
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 3000:3000
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../apis/test/main-fastify:/app
+  cache-db-uis-snitzsh-redisinsight:
+    container_name: cache-db-uis-snitzsh-redisinsight
+    depends_on: []
+    environment: {}
+    hostname: cache-db-uis-snitzsh-redisinsight
+    image: redislabs/redisinsight:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redisinsight
+    - com.docker.compose.service-name=cache-db-uis-snitzsh-redisinsight
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5540:5540
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-db-uis-snitzsh-redisinsight:/db
+  cache-db-uis-test-redisinsight:
+    container_name: cache-db-uis-test-redisinsight
+    depends_on: []
+    environment: {}
+    hostname: cache-db-uis-test-redisinsight
+    image: redislabs/redisinsight:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-db-uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=redisinsight
+    - com.docker.compose.service-name=cache-db-uis-test-redisinsight
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 5540:5540
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-db-uis-test-redisinsight:/db
+  cache-dbs-snitzsh-redis:
+    command: redis-server --save 20 1 --loglevel warning --requirepass root
+    container_name: cache-dbs-snitzsh-redis
+    depends_on: []
+    environment:
+      REDIS_USERNAME: root
+    expose:
+    - "6379"
+    hostname: cache-dbs-snitzsh-redis
+    image: redis:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-dbs
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redis
+    - com.docker.compose.service-name=cache-dbs-snitzsh-redis
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 6379:6379
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-dbs-snitzsh-redis/data:/data
+  db-uis-snitzsh-pgadmin4:
+    container_name: db-uis-snitzsh-pgadmin4
+    depends_on: []
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    expose:
+    - "80"
+    hostname: db-uis-snitzsh-pgadmin4
+    image: dpage/pgadmin4:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=pgadmin4
+    - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5050:80
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/db-uis-snitzsh-pgadmin4:/var/lib/pgadmin
+  db-uis-test-pgadmin4:
+    container_name: db-uis-test-pgadmin4
+    depends_on: []
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    expose:
+    - "80"
+    hostname: db-uis-test-pgadmin4
+    image: dpage/pgadmin4:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=pgadmin4
+    - com.docker.compose.service-name=db-uis-test-pgadmin4
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 5050:80
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/db-uis-test-pgadmin4:/var/lib/pgadmin
+  dbs-snitzsh-postgres:
+    container_name: dbs-snitzsh-postgres
+    depends_on: []
+    environment:
+      POSTGRES_DB: snitzsh_db
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
+    expose:
+    - "5432"
+    hostname: dbs-snitzsh-postgres
+    image: postgres:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=dbs
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=postgres
+    - com.docker.compose.service-name=dbs-snitzsh-postgres
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5432:5432
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/dbs-snitzsh-postgres/data:/var/lib/postgresql/data
+    - ./volumes/dbs-snitzsh-postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+  dbs-test-postgres:
+    container_name: dbs-test-postgres
+    depends_on: []
+    environment:
+      POSTGRES_DB: snitzsh_db
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
+    expose:
+    - "5432"
+    hostname: dbs-test-postgres
+    image: postgres:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=dbs
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=postgres
+    - com.docker.compose.service-name=dbs-test-postgres
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 5432:5432
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/dbs-test-postgres/data:/var/lib/postgresql/data
+    - ./volumes/dbs-test-postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+  uis-snitzsh-main-vue:
+    build:
+      args:
+        _WORKDIR: /app
+        VITE_APP_PLATFORM_CLUSTER_NAME: dev
+        VITE_APP_PLATFORM_CLUSTER_TYPE: local
+        VITE_APP_PLATFORM_HOST: 0.0.0.0
+        VITE_APP_PLATFORM_PORT: "8080"
+        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../uis/snitzsh/main-vue
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: uis-snitzsh-main-vue
+    depends_on:
+    - apis-snitzsh-main-rust
+    environment: {}
+    hostname: uis-snitzsh-main-vue
+    image: uis-snitzsh-main-vue:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=main-vue
+    - com.docker.compose.service-name=uis-snitzsh-main-vue
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 8080:8080
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../uis/snitzsh/main-vue/src:/app/src
+  uis-test-main-vue:
+    build:
+      args:
+        _WORKDIR: /app
+        VITE_APP_PLATFORM_CLUSTER_NAME: dev
+        VITE_APP_PLATFORM_CLUSTER_TYPE: local
+        VITE_APP_PLATFORM_HOST: 0.0.0.0
+        VITE_APP_PLATFORM_PORT: "8080"
+        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../uis/test/main-vue
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: uis-test-main-vue
+    depends_on:
+    - apis-test-main-fastify
+    environment: {}
+    hostname: uis-test-main-vue
+    image: uis-test-main-vue:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=main-vue
+    - com.docker.compose.service-name=uis-test-main-vue
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 8080:8080
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../uis/test/main-vue/src:/app/src
+volumes:
+  apis-snitzsh-main-rust:
+    driver: local
+  apis-test-main-fastify:
+    driver: local
+  cache-db-uis-snitzsh-redisinsight:
+    driver: local
+  cache-db-uis-test-redisinsight:
+    driver: local
+  cache-dbs-snitzsh-redis:
+    driver: local
+  db-uis-snitzsh-pgadmin4:
+    driver: local
+  db-uis-test-pgadmin4:
+    driver: local
+  dbs-snitzsh-postgres:
+    driver: local
+  dbs-test-postgres:
+    driver: local
+  uis-snitzsh-main-vue:
+    driver: local
+  uis-test-main-vue:
+    driver: local
+networks:
+  test:
+    driver: bridge
