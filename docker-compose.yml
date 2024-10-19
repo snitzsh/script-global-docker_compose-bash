@@ -15,7 +15,8 @@ services:
       dockerfile: Dockerfile
       target: dev-stage
     container_name: apis-snitzsh-main-rust
-    depends_on: []
+    depends_on:
+    - dbs-snitzsh-postgres
     environment: {}
     hostname: apis-snitzsh-main-rust
     image: apis-snitzsh-main-rust:latest
@@ -65,6 +66,34 @@ services:
     tty: true
     volumes:
     - ./volumes/cache-dbs-snitzsh-redis/data:/data
+  db-uis-snitzsh-pgadmin4:
+    container_name: db-uis-snitzsh-pgadmin4
+    depends_on:
+    - dbs-snitzsh-postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@snitzsh.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    expose:
+    - "80"
+    hostname: db-uis-snitzsh-pgadmin4
+    image: dpage/pgadmin4:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=pgadmin4
+    - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - platform
+    platform: linux/arm64
+    ports:
+    - 5050:80
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/db-uis-snitzsh-pgadmin4:/var/lib/pgadmin
   dbs-snitzsh-postgres:
     container_name: dbs-snitzsh-postgres
     depends_on: []
@@ -98,6 +127,8 @@ volumes:
   apis-snitzsh-main-rust:
     driver: local
   cache-dbs-snitzsh-redis:
+    driver: local
+  db-uis-snitzsh-pgadmin4:
     driver: local
   dbs-snitzsh-postgres:
     driver: local

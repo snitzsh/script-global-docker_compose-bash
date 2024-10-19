@@ -1,6 +1,6 @@
 {{- /*
 TODO:
-  - do port generator
+  - null
 
 NOTE:
   - null
@@ -12,16 +12,20 @@ ARGS:
   - .
 
 RETURN:
-  - `yaml`
+  - null
 */}}
-{{- define "docker-compose.functions.services" }}
+{{- define "docker-compose.functions.apps" -}}
+{{- end }}
+
+{{- define "docker-compose.functions.services" -}}
   {{- $globals := . }}
-  {{- $apps := .Values.apps }}
-  {{- $merge_apps := .Values.merge_apps }}
-  {{- $default_app_name := .Values.default_app_name }}
-  {{- $image_only := .Values.image_only }}
-  {{- $components := .Values.components }}
-  {{- $docker := .Values.docker }}
+  {{- $values := $globals.Values}}
+  {{- $apps := $values.apps }}
+  {{- $merge_apps := $values.merge_apps }}
+  {{- $default_app_name := $values.default_app_name }}
+  {{- $image_only := $values.image_only }}
+  {{- $components := $values.components }}
+  {{- $docker := $values.docker }}
   {{- $services_per_app := dict }}
   {{- $merged_app_services := dict }}
 
@@ -53,7 +57,6 @@ RETURN:
               }}
 
               {{- $app_services = merge $app_services $app_yaml }}
-
               {{- if hasKey $services_per_app $app_name }}
                 {{- $service_per_app_2 := get $services_per_app $app_name }}
                 {{- range $key_name, $item := $app_yaml }}
@@ -123,10 +126,138 @@ services:
     {{- end }}
   {{- end }}
 {{- end }}
+
 {{- /*
 TODO:
-  - if merged_apps is false, it still create multiple volumes for each service,
-    it should only create one per service.
+  - null
+
+NOTE:
+  - `item.software_type` is not returned as part of string in array's item.
+
+DESCRIPTION:
+  - Sanitizes the each item object [..., {"software_type": "a", utility_name: "b", app_name: "c", project_name: "d"}, ...]
+    to return [..., "", ...]
+
+ARGS:
+  - .globals
+  - .depends_on = [{}, {}]
+
+RETURN:
+  - array
+
+OUTPUT
+{"depends_on": [..., "b-c-d",...]}
+
+*/}}
+{{- define "docker-compose.functions.depends-on" -}}
+  {{- $globals := .globals }}
+  {{- $values := $globals.Values }}
+  {{- $apps := $values.apps }}
+  {{- $depends_on := default list .depends_on }}
+  {{- $obj := dict "depends_on" (list) }}
+  {{- if gt (len $depends_on) 0 }}
+    {{- range $_, $item := $depends_on }}
+      {{- $splitted := split "." $item }}
+      {{- $software_type := default "<[project_type_placeholder]>" $splitted._0 }}
+      {{- $utility_name := default "<[utility_name_placeholder]>" $splitted._1 }}
+      {{- $app_name := default "<[app_name_placeholder]>" $splitted._2 }}
+      {{- $project_name := default "<[project_name_placeholder]>" $splitted._3 }}
+      {{- $dependency := (
+            dict
+              "software_type" $software_type
+              "utility_name" $utility_name
+              "app_name" $app_name
+              "project_name" $project_name
+          )
+      }}
+      {{- if has $app_name $apps }}
+        {{- $is_found := include "docker-compose.functions.project-exist" (
+              dict
+                "globals" $globals
+                "dependency" $dependency
+            ) | fromJson
+        }}
+          {{- $obj = merge $obj (
+                dict
+                  "depends_on" (
+                    append $obj.depends_on (
+                      printf "%s-%s-%s" $utility_name $app_name $project_name
+                    )
+                  )
+              )
+          }}
+        {{- if $is_found.found }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{ $obj | toJson }}
+{{- end }}
+
+{{- /*
+
+TODO:
+  - null
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - checks if a service's depends on are enabled. if enabled it returns
+    `.found=true`, else `.found=true`.
+
+ARGS:
+  - global     : dict
+  - dependency : dict
+
+RETURN:
+  - dict
+
+OUTPUT
+  - {found: (true | false)}
+
+*/}}
+{{- define "docker-compose.functions.project-exist" -}}
+  {{- $globals := .globals }}
+  {{- $values := $globals.Values }}
+  {{- $components := $values.components }}
+  {{- $dependency := .dependency  }}
+  {{- $software_type := $dependency.software_type }}
+  {{- $utility_name := $dependency.utility_name }}
+  {{- $app_name := $dependency.app_name }}
+  {{- $project_name := $dependency.project_name }}
+  {{- $found := dict "found" false }}
+
+  {{- $software_exit := hasKey $components $software_type }}
+  {{- if $software_exit }}
+    {{- $software_obj := get $components $software_type }}
+    {{- $utility_exit := hasKey $software_obj $utility_name }}
+    {{- if $utility_exit }}
+      {{- $utility_obj := get $software_obj $utility_name }}
+      {{- $app_exist := hasKey $utility_obj $app_name }}
+      {{- if $app_exist }}
+        {{- $app_obj := get $utility_obj $app_name }}
+        {{- $project_exit := hasKey $app_obj $project_name }}
+        {{- if $project_exit }}
+          {{- $project_obj := get $app_obj $project_name}}
+          {{- $is_enabled := $project_obj.enabled }}
+          {{- if $is_enabled }}
+            {{- $found = merge $found (
+                  dict
+                    "found" true
+                )
+            }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{ $found | toJson }}
+{{- end }}
+
+{{- /*
+TODO:
+  - null
 
 NOTE:
   - null
@@ -135,8 +266,11 @@ DESCRIPTION:
   - Creates a `volume` for a component.
 
 ARGS:
-  - $global = Object
-  - $services_name = list
+  - $global
+      data-type   : dict
+      description : helm's global dict
+      example: {.<[values.yaml's object]>}
+  - $services_name  : list  : list of names of each service name 
 
 RETURN:
   - `{volumes: {<[component-name]>: driver: <[name]> }}`
@@ -309,128 +443,4 @@ RETURN:
     {{- $labels = concat $labels $private_labels }}
   {{- end }}
   {{ (dict "labels" $labels) | toJson }}
-{{- end }}
-
-{{- /*
-TODO:
-  - null
-
-NOTE:
-  - `item.software_type` is not returned as part of string in array's item.
-
-DESCRIPTION:
-  - Sanitizes the each item object [..., {"software_type": "a", utility_name: "b", app_name: "c", project_name: "d"}, ...]
-    to return [..., "", ...]
-
-ARGS:
-  - .globals
-  - .depends_on = [{}, {}]
-
-RETURN:
-  - array
-
-OUTPUT
-[..., "b-c-d",...]
-
-*/}}
-{{- define "docker-compose.functions.depends-on" -}}
-  {{- $globals := .globals }}
-  {{- $values := $globals.Values }}
-  {{- $apps := $values.apps }}
-  {{- $depends_on := default list .depends_on }}
-  {{- $obj := dict "depends_on" (list) }}
-  {{- if gt (len $depends_on) 0 }}
-    {{- range $_, $item := $depends_on }}
-      {{- $splitted := split "." $item }}
-      {{- $software_type := default "<[project_type_placeholder]>" $splitted._0 }}
-      {{- $utility_name := default "<[utility_name_placeholder]>" $splitted._1 }}
-      {{- $app_name := default "<[app_name_placeholder]>" $splitted._2 }}
-      {{- $project_name := default "<[project_name_placeholder]>" $splitted._3 }}
-      {{- $dependency := (dict
-            "software_type" $software_type
-            "utility_name" $utility_name
-            "app_name" $app_name
-            "project_name" $project_name
-          )
-      }}
-      {{- if has $app_name $apps }}
-        {{- $is_found := include "docker-compose.functions.project-exist" (
-              dict
-                "globals" $globals
-                "dependency" $dependency
-            ) | fromJson
-        }}
-        {{- if $is_found.found }}
-          {{- $obj = merge $obj (
-                dict
-                  "depends_on" (
-                    append $obj.depends_on (
-                      printf "%s-%s-%s" $utility_name $app_name $project_name
-                    )
-                  )
-              )
-          }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{ $obj | toJson }}
-{{- end }}
-
-{{- /*
-TODO:
-  - null
-
-NOTE:
-  - null
-
-DESCRIPTION:
-  - null
-
-ARGS:
-  - global = {}
-  - dependency = {}
-
-RETURN:
-  - boolean
-
-OUTPUT
-  - true | false
-*/}}
-{{- define "docker-compose.functions.project-exist" -}}
-  {{- $globals := .globals }}
-  {{- $values := $globals.Values }}
-  {{- $components := $values.components }}
-  {{- $dependency := .dependency  }}
-  {{- $software_type := $dependency.software_type }}
-  {{- $utility_name := $dependency.utility_name }}
-  {{- $app_name := $dependency.app_name }}
-  {{- $project_name := $dependency.project_name }}
-  {{- $found := dict "found" false }}
-
-  {{- $software_exit := hasKey $components $software_type }}
-  {{- if $software_exit }}
-    {{- $software_obj := get $components $software_type }}
-    {{- $utility_exit := hasKey $software_obj $utility_name }}
-    {{- if $utility_exit }}
-      {{- $utility_obj := get $software_obj $utility_name }}
-      {{- $app_exist := hasKey $utility_obj $app_name }}
-      {{- if $app_exist }}
-        {{- $app_obj := get $utility_obj $app_name }}
-        {{- $project_exit := hasKey $app_obj $project_name }}
-        {{- if $project_exit }}
-          {{- $project_obj := get $app_obj $project_name}}
-          {{- $is_enabled := $project_obj.enabled }}
-          {{- if $is_enabled }}
-            {{- $found = merge $found (
-                  dict
-                    "found" true
-                )
-            }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{ $found | toJson }}
 {{- end }}

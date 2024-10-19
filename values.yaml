@@ -89,7 +89,7 @@ components:
     db-uis:
       snitzsh:
         pgadmin4:
-          enabled: false
+          enabled: true
           tag: latest
           depends_on:
             - public.dbs.snitzsh.postgres
@@ -146,7 +146,7 @@ components:
           target_script: "dev"
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
-          depend_on:
+          depends_on:
             - public.dbs.snitzsh.postgres
             - public.cache-dbs.snitzsh.redis
       test:
@@ -168,7 +168,7 @@ components:
           target_script: "dev"
           host: "0.0.0.0"
           port: "3000" # this will be dynamic handled by helm
-          depend_on:
+          depends_on:
             - public.dbs.test.postgres
             - public.cache-dbs.test.redis
     uis:
