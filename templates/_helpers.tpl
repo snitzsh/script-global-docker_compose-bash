@@ -1,4 +1,5 @@
 {{- /*
+
 TODO:
   - null
 
@@ -13,12 +14,42 @@ ARGS:
 
 RETURN:
   - null
-*/}}
-{{- define "docker-compose.functions.apps" -}}
-{{- end }}
 
+*/}}
+{{- define "docker-compose.functions.main" -}}
+{{- end }}
+{{- /*
+
+TODO:
+  - null
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Generates the service
+
+ARGS:
+  - $global
+      data-type   : dict
+      description : Helm's global dict
+      example     : {<[helm's object]>}
+
+RETURN:
+  - dict
+
+OUTPUT:
+  {
+    ...,
+    "<service_name>": {},
+    ...
+  }
+
+*/}}
 {{- define "docker-compose.functions.services" -}}
+  {{- /* args */}}
   {{- $globals := . }}
+  {{- /* globals */}}
   {{- $values := $globals.Values}}
   {{- $apps := $values.apps }}
   {{- $merge_apps := $values.merge_apps }}
@@ -26,6 +57,7 @@ RETURN:
   {{- $image_only := $values.image_only }}
   {{- $components := $values.components }}
   {{- $docker := $values.docker }}
+  {{- /* local variables */}}
   {{- $services_per_app := dict }}
   {{- $merged_app_services := dict }}
 
@@ -128,33 +160,46 @@ services:
 {{- end }}
 
 {{- /*
+
 TODO:
   - null
 
 NOTE:
-  - `item.software_type` is not returned as part of string in array's item.
+  - null
 
 DESCRIPTION:
-  - Sanitizes the each item object [..., {"software_type": "a", utility_name: "b", app_name: "c", project_name: "d"}, ...]
-    to return [..., "", ...]
+  - It check if service's depends_on items are valid and enabled. If any are
+    not valid or enabled, it returns default empty output.
 
 ARGS:
-  - .globals
-  - .depends_on = [{}, {}]
+  - $global
+      data-type   : dict
+      description : Helm's global dict
+      example     : {<[helm's object]>}
+  - .depends_on
+      data-type   :
+      description : Lisst of service's name
+      example     : [..., "<[service_name]>", ...]
 
 RETURN:
-  - array
+  - dict
 
-OUTPUT
-{"depends_on": [..., "b-c-d",...]}
+OUTPUT:
+  {
+    "depends_on": ([] | [..., "<[service_name]>",...])
+  }
 
 */}}
 {{- define "docker-compose.functions.depends-on" -}}
+  {{- /* args */}}
   {{- $globals := .globals }}
+  {{- $depends_on := default list .depends_on }}
+  {{- /* globals */}}
   {{- $values := $globals.Values }}
   {{- $apps := $values.apps }}
-  {{- $depends_on := default list .depends_on }}
+  {{- /* local variables */}}
   {{- $obj := dict "depends_on" (list) }}
+
   {{- if gt (len $depends_on) 0 }}
     {{- range $_, $item := $depends_on }}
       {{- $splitted := split "." $item }}
@@ -177,16 +222,15 @@ OUTPUT
                 "dependency" $dependency
             ) | fromJson
         }}
+        {{- if $is_found.found }}
+          {{- $service_name := printf "%s-%s-%s" $utility_name $app_name $project_name }}
           {{- $obj = merge $obj (
                 dict
                   "depends_on" (
-                    append $obj.depends_on (
-                      printf "%s-%s-%s" $utility_name $app_name $project_name
-                    )
+                    append $obj.depends_on $service_name
                   )
               )
           }}
-        {{- if $is_found.found }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -203,32 +247,42 @@ NOTE:
   - null
 
 DESCRIPTION:
-  - checks if a service's depends on are enabled. if enabled it returns
-    `.found=true`, else `.found=true`.
+  - Checks if a service's depends on are enabled.
 
 ARGS:
-  - global     : dict
-  - dependency : dict
+  - $global
+      data-type   : dict
+      description : Helm's global dict
+      example     : {<[helm's object]>}
+  - dependency
+      data-type   : dict
+      description : service dependency info
+      example     : {..., "key": "string", ...}
 
 RETURN:
   - dict
 
-OUTPUT
-  - {found: (true | false)}
+OUTPUT:
+  {
+    "found": (true | false)
+  }
 
 */}}
 {{- define "docker-compose.functions.project-exist" -}}
+  {{- /* args */}}
   {{- $globals := .globals }}
+  {{- $dependency := .dependency }}
+  {{- /* globals */}}
   {{- $values := $globals.Values }}
   {{- $components := $values.components }}
-  {{- $dependency := .dependency  }}
+  {{- /* local variables */}}
   {{- $software_type := $dependency.software_type }}
   {{- $utility_name := $dependency.utility_name }}
   {{- $app_name := $dependency.app_name }}
   {{- $project_name := $dependency.project_name }}
   {{- $found := dict "found" false }}
-
   {{- $software_exit := hasKey $components $software_type }}
+
   {{- if $software_exit }}
     {{- $software_obj := get $components $software_type }}
     {{- $utility_exit := hasKey $software_obj $utility_name }}
@@ -256,6 +310,7 @@ OUTPUT
 {{- end }}
 
 {{- /*
+
 TODO:
   - null
 
@@ -267,25 +322,37 @@ DESCRIPTION:
 
 ARGS:
   - $global
-      data-type   : dict
-      description : helm's global dict
-      example: {.<[values.yaml's object]>}
-  - $services_name  : list  : list of names of each service name 
+      data-type     : dict
+      description   : Helm's global dict
+      example       : {<[helm's object]>}
+  - $services_name
+      data-type     : list
+      decription    : List of names of each service name
+      example       : [..., "<[utility_name]>.<[app_name]>.<[project_name]>", ...]
 
-RETURN:
-  - `{volumes: {<[component-name]>: driver: <[name]> }}`
+RETURN
+  - dict
 
-OUTPUT EXAMPLE:
-  volumes:
-    cache-db-uis-<[app_name]>-<image_name>:
-      driver: local
+EXAMPLE:
+  {
+    "volumes": {
+      "<[utility_name]>-<[app_name]>-<[project_name]>":
+        "driver": "<[name]>"
+      }
+    }
+  }
+
 */}}
 {{- define "docker-compose.functions.volumes" -}}
+  {{- /* args */}}
   {{- $globals := .globals }}
   {{- $services_name := .services_name }}
+  {{- /* globals */}}
   {{- $values := $globals.Values }}
   {{- $components := $values.components }}
+  {{- /* local variables */}}
   {{- $volumes := dict "volumes" (dict) }}
+
   {{- /* loops: public, private */}}
   {{- range $software_type, $software_type_obj := $components }}
     {{- /* loops components (inside components main_object) */}}
@@ -317,45 +384,58 @@ OUTPUT EXAMPLE:
 {{- end }}
 {{- /*
 TODO:
-  - Find out how to fix the issue where it creates all volumes when
-    `merge_apps=false` it should create a network per
-    `<[component_name]-<[app_name]>-<[project_name]>`.
-    It already create all when `merge_apps=true`.
+  - null
 
 NOTE:
   - null
 
 DESCRIPTION:
-  - Returns 2 different outpus depending on data_type
-    1) When data_type is dict, it creates a `network` per app if
-      `merge_apps=true` else, it creates a single network for all apps.
-    2) When data_type is list it create list of service nerwork(s).
+  - Create the networks for the service and/or each app dependency on data_type
+    argument:
+      1) When `.data_type` is dict, it creates a `network` per app if
+        `merge_apps=true` else, it creates a single network for all apps.
+      2) When `.data_type`` is list it create list of service nerwork(s).
 
 ARGS:
-  - $global: dict
-  - networks: list
-  - data_type: string
-  - service_name: string
+  - $global
+      data-type     : dict
+      description   : Helm's global dict
+      example       : {<[helm's object]>}
+  - app_name:
+      data-type     : string
+      description   : app's name of service
+      example       : {<[helm's object]>}
 
 RETURN:
   - dict | list
 
-OUTPUT EXAMPLE:
+OUTPUT:
   data_type = dict
-  {"networks":{"cache-dbs-snitzsh-redis": {"driver": bridge}}}
+  {
+    "networks":{
+      "<[utility_name]>-<[app_name]>-<[project_name]>": {
+        "driver": bridge
+      }
+    }
+  }
 
   data_type = list
-  [dbcache-dbs-snitzsh-redis]
+  [..., "<[utility_name]>-<[app_name]>-<[project_name]>", ...]
+
 */}}
 {{- define "docker-compose.functions.normalize-networks" -}}
+  {{- /* args */}}
   {{- $globals := .globals }}
+  {{- $app_name := default nil .app_name }}
+  {{- /* globals */}}
   {{- $values := $globals.Values }}
   {{- $apps := $values.apps }}
   {{- $merge_apps := $values.merge_apps }}
   {{- $default_app_name := $values.default_app_name }}
-  {{- $app_name_2 := default nil .app_name }}
+  {{- /* local variables */}}
   {{- $obj := dict "networks" (dict) }}
   {{- $data_type := default "list" .data_type }}
+
   {{- if $merge_apps }}
     {{- $network :=  dict
         (printf "%s" $default_app_name ) (dict "driver" "bridge")
@@ -366,10 +446,10 @@ OUTPUT EXAMPLE:
         )
     }}
   {{- else }}
-    {{- range $_, $app_name := $apps }}
-      {{- if eq $app_name $app_name_2  }}
+    {{- range $_, $app_name_2 := $apps }}
+      {{- if eq $app_name $app_name_2 }}
         {{- $network :=  dict
-            (printf "%s" $app_name) (dict "driver" "bridge")
+            (printf "%s" $app_name_2) (dict "driver" "bridge")
         }}
         {{- $obj = merge $obj (
               dict
@@ -403,16 +483,45 @@ DESCRIPTION:
   - Creates labels for private and public components
 
 ARGS:
-  - .
+  - $global
+      data-type     : dict
+      description   : Helm's global dict
+      example       : {<[helm's object]>}
+  - $software_type
+      data-type     : string
+      description   : service's software type
+      example       : "<[software_type]>"
+  - $utility_name
+      data-type     : string
+      description   : service's utility name
+      example       : "<[utilty_name]>"
+  - $app_name
+      data-type     : string
+      description   : service's app name
+      example       : "<[app_name]>"
+  - $project_name
+      data-type     : string
+      description   : service's project name
+      example       : "<[project_name]>"
+  - $project_object
+      data-type     : dict
+      description   : service's project info
+      example       : {..., "key": "value", ...}
 
 RETURN:
-  - `yaml`
+  - dict
+
+OUTPUT:
+  {
+    "labels": [..., "<[label]>", ...]
+  }
+
 */}}
 {{- define "docker-compose.functions.service-labels" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}
-  {{- $component_name := .component_name }}
+  {{- $utility_name := .component_name }}
   {{- $app_name := .app_name }}
   {{- $project_name := .project_name }}
   {{- $project_obj := .project_obj }}
@@ -420,17 +529,17 @@ RETURN:
   {{- $values := $globals.Values }}
   {{- $platform := $values.platform }}
   {{- $domain := $values.domain }}
-
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
+  {{- $service_name := printf "%s-%s-%s" $utility_name $app_name $project_name }}
   {{- $labels := list
         (printf "%s.software-type=%s" $domain $software_type)
-        (printf "%s.component-name=%s" $domain $component_name)
+        (printf "%s.component-name=%s" $domain $utility_name)
         (printf "%s.app-name=%s" $domain $app_name)
         (printf "%s.project-name=%s" $domain $project_name)
         (printf "%s.service-name=%s" $domain $service_name)
         (printf "%s.platform=%s" $domain $platform)
   }}
+
   {{- if eq $software_type "private" }}
     {{- /*
       TODO:
