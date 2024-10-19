@@ -27,7 +27,7 @@ TODO:
   {{- /* imported modules */}}
   {{- $depends_on_2 := include "docker-compose.functions.depends-on" (
         dict
-          "global" $values
+          "global" $globals
           "depends_on" $depends_on
       ) | fromJson | toYaml | nindent 2
   }}
