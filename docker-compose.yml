@@ -22,10 +22,10 @@ services:
     image: apis-snitzsh-main-rust:latest
     labels:
     - com.docker.compose.software-type=private
-    - com.docker.compose.component-name=apis
+    - com.docker.compose.component-name=%!s(<nil>)
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=main-rust
-    - com.docker.compose.service-name=apis-snitzsh-main-rust
+    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-main-rust
     - com.docker.compose.platform=linux/arm64
     - com.docker.compose.docker-stage=dev-stage
     - com.docker.compose.target-script=dev
@@ -51,10 +51,10 @@ services:
     image: redis:latest
     labels:
     - com.docker.compose.software-type=public
-    - com.docker.compose.component-name=cache-dbs
+    - com.docker.compose.component-name=%!s(<nil>)
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=redis
-    - com.docker.compose.service-name=cache-dbs-snitzsh-redis
+    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-redis
     - com.docker.compose.platform=linux/arm64
     networks:
     - snitzsh
@@ -79,10 +79,10 @@ services:
     image: dpage/pgadmin4:latest
     labels:
     - com.docker.compose.software-type=public
-    - com.docker.compose.component-name=db-uis
+    - com.docker.compose.component-name=%!s(<nil>)
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=pgadmin4
-    - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
+    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-pgadmin4
     - com.docker.compose.platform=linux/arm64
     networks:
     - snitzsh
@@ -107,10 +107,10 @@ services:
     image: postgres:latest
     labels:
     - com.docker.compose.software-type=public
-    - com.docker.compose.component-name=dbs
+    - com.docker.compose.component-name=%!s(<nil>)
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=postgres
-    - com.docker.compose.service-name=dbs-snitzsh-postgres
+    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-postgres
     - com.docker.compose.platform=linux/arm64
     networks:
     - snitzsh
@@ -158,10 +158,10 @@ services:
     image: uis-test-main-vue:latest
     labels:
     - com.docker.compose.software-type=private
-    - com.docker.compose.component-name=uis
+    - com.docker.compose.component-name=%!s(<nil>)
     - com.docker.compose.app-name=test
     - com.docker.compose.project-name=main-vue
-    - com.docker.compose.service-name=uis-test-main-vue
+    - com.docker.compose.service-name=%!s(<nil>)-test-main-vue
     - com.docker.compose.platform=linux/arm64
     - com.docker.compose.docker-stage=dev-stage
     - com.docker.compose.target-script=dev

@@ -7,7 +7,7 @@ TODO:
   {{- /* Args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}
-  {{- $component_name := .component_name }}
+  {{- $utility_name := .utility_name }}
   {{- $app_name := .app_name }}
   {{- $project_name := .project_name }}
   {{- $project_obj := .project_obj }}
@@ -21,8 +21,8 @@ TODO:
   {{- $tag := $project_obj.tag }}
   {{- $depends_on := $project_obj.depends_on }}
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $component_name $app_name $project_name }}
-  {{- $folder_name := printf "%s/%s/%s" $component_name $app_name $project_name }}
+  {{- $service_name := printf "%s-%s-%s" $utility_name $app_name $project_name }}
+  {{- $folder_name := printf "%s/%s/%s" $utility_name $app_name $project_name }}
   {{- /* imported modules */}}
   {{- $depends_on_2 := include "docker-compose.functions.depends-on" (
         dict
@@ -34,7 +34,7 @@ TODO:
         include "docker-compose.functions.service-labels" .
       ) | fromJson | toYaml | nindent 2
   }}
-  {{- $networks := include "docker-compose.functions.normalize-networks" (
+  {{- $networks := include "docker-compose.networks" (
         dict
           "globals" $globals
           "app_name" $app_name

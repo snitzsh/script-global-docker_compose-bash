@@ -56,7 +56,7 @@ services:
           }}
         {{- end }}
         {{- if $docker.networks }}
-          {{- include "docker-compose.functions.normalize-networks" (
+          {{- include "docker-compose.networks" (
                 dict
                   "globals" $globals
                   "data_type" "dict"
@@ -81,7 +81,7 @@ services:
           }}
         {{- end }}
         {{- if $docker.networks }}
-          {{- include "docker-compose.functions.normalize-networks" (
+          {{- include "docker-compose.networks" (
                 dict
                   "globals" $globals
                   "app_name" $app_name_2
@@ -151,7 +151,7 @@ OUTPUT:
                   dict
                     "globals" $globals
                     "software_type" $software_type
-                    "component_name" $utility_name
+                    "utility_name" $utility_name
                     "app_name" $app_name
                     "project_name" $project_name
                     "project_obj" $project_obj
@@ -445,7 +445,7 @@ OUTPUT:
   [..., "<[utility_name]>-<[app_name]>-<[project_name]>", ...]
 
 */}}
-{{- define "docker-compose.functions.normalize-networks" -}}
+{{- define "docker-compose.functions.networks" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $app_name := default nil .app_name }}
