@@ -1,7 +1,50 @@
 {{- /*
+
 TODO:
   - build image per FASTIFY_APP_PLATFORM_COMPONENTS
   - make port dynamic
+  - Make this a template to be able to re-use it, else we would need to create
+    on of this function per app.
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Generates service
+
+ARGS:
+  - globals
+      data-type   : dict
+      description : Helm's global dict
+      example     : {<[helm's object]>}
+  - software_type
+      data-type     : string
+      description   : service's software type
+      example       : "<[software_type]>"
+  - utility_name
+      data-type     : string
+      description   : service's utility name
+      example       : "<[utilty_name]>"
+  - app_name
+      data-type     : string
+      description   : service's app name
+      example       : "<[app_name]>"
+  - project_name
+      data-type     : string
+      description   : service's project name
+      example       : "<[project_name]>"
+  - project_object
+      data-type     : dict
+      description   : service's project info
+      example       : {..., "key": "value", ...}
+
+RETURN:
+  - yaml
+
+OUTPUT:
+  a:
+    b: c
+
 */}}
 {{- define "docker-compose.main-fastify" -}}
   {{- /* args */}}

@@ -13,20 +13,20 @@
         "globals" $globals
     ) | fromJson
 }}
-{{- $merged_app_services := $services.merged_app_services }}
-{{- $services_per_app := $services.services_per_app }}
+{{- $merged_apps_services := $services.merged_apps_services }}
+{{- $not_merged_apps_services := $services.not_merged_apps_services }}
 
 {{- if $merge_apps }}
-  {{- if gt (len $merged_app_services) 0 }}
+  {{- if gt (len $merged_apps_services) 0 }}
 name: {{ $default_app_name }}
 services:
-    {{- $merged_app_services | toYaml | nindent 2 }}
+    {{- $merged_apps_services | toYaml | nindent 2 }}
     {{- if not $image_only }}
       {{- if $docker.volumes }}
         {{- include "docker-compose.volumes" (
               dict
                 "globals" $globals
-                "services_name" (keys $merged_app_services)
+                "services_name" (keys $merged_apps_services)
             ) | fromJson | toYaml | nindent 0
         }}
       {{- end }}
@@ -34,6 +34,7 @@ services:
         {{- include "docker-compose.networks" (
               dict
                 "globals" $globals
+                "app_name" nil
                 "data_type" "dict"
             ) | fromJson | toYaml | nindent 0
         }}
@@ -42,16 +43,16 @@ services:
   {{- end }}
 {{- /* Multiple apps on its own docker image */}}
 {{- else }}
-  {{- range $app_name_2, $app_services_2 := $services_per_app }}
-name: {{ $app_name_2 }}
+  {{- range $app_name, $app_services := $not_merged_apps_services }}
+name: {{ $app_name }}
 services:
-    {{- $app_services_2 | toYaml | nindent 2 }}
+    {{- $app_services | toYaml | nindent 2 }}
     {{- if not $image_only }}
       {{- if $docker.volumes }}
         {{- include "docker-compose.volumes" (
               dict
                 "globals" $globals
-                "services_name" (keys $app_services_2)
+                "services_name" (keys $app_services)
             ) | fromJson | toYaml | nindent 0
         }}
       {{- end }}
@@ -59,7 +60,7 @@ services:
         {{- include "docker-compose.networks" (
               dict
                 "globals" $globals
-                "app_name" $app_name_2
+                "app_name" $app_name
                 "data_type" "dict"
             ) | fromJson | toYaml | nindent 0
         }}

@@ -26,32 +26,42 @@ docker_compose_version: "TODO"
 apps:
   - snitzsh
   - test
+#
+# NOTE:
+#   - if `merge_apps: true`, it will use this name for the apps. in docker desktop
+#
+default_app_name: platform
+#
+# TODO:
+#   - support this prop
+#
+# NOTE:
+#   - user that executed this scripts: gitlab pipeline
+#
+user: ""
 
-user: "" # user that executed this scripts: gitlab pipeline
 domain: "com.docker.compose"
-# Note:
-#   true : it build the image only.
-#   false : it creates a container
+#
+# NOTE:
+#   - true : it build the image only.
+#   - false : it creates a container.
+#
 image_only: false
-
 #
 # NOTE:
 #   - if `true`, it create one document in docker-compose.yaml
 #     else will create multiple.
 #
 merge_apps: false
-
-# NOTE:
-#   - if `merge_apps: true`, it will use this name for the apps. in docker desktop
-default_app_name: platform
-
+#
 # TODO:
 #   - Support multi registries
+#
 registries:
   - docker # local (desktop) or remote (based on cluster_type)
   - harbor
   - aws
-
+#
 # TODO:
 #   - in boilerplate get the architecture by running this command: `docker version`
 #     look for the Server: OS/Arch
@@ -70,8 +80,11 @@ env:
   cluster_type: local
 
 components:
+  # software_type
   public:
+    # utility_name
     dbs:
+      # app_name
       snitzsh:
         postgres:
           enabled: true
@@ -189,11 +202,17 @@ components:
           port: "8080" # this will be dynamic handled by helm
           depends_on: # in case it depends on other component.
             - private.apis.test.main-fastify
-
+#
+# NOTE:
+#   - it will take effect it .image_only=false
+#
 docker:
   volumes: true
   networks: true
 
+#
+# TODO:
+#   - support this to get user from remote or .env file
 #
 # IMPORTANT:
 #   - when changing the auth, make sure to do `docker system prune --all --force`
@@ -201,6 +220,7 @@ docker:
 #
 # NOTE:
 #   - Mainly for `local` development: redis, redisinsight, postgres, pgadmin4
+#
 auth:
   email: 'root@snitzsh.com'
   username: 'root'

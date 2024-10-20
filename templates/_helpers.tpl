@@ -7,10 +7,10 @@ NOTE:
   - null
 
 DESCRIPTION:
-  - Generates the service
+  - Generates the app(s) services based `.merged_apps` value.
 
 ARGS:
-  - $global
+  - globals
       data-type   : dict
       description : Helm's global dict
       example     : {<[helm's object]>}
@@ -31,11 +31,12 @@ OUTPUT:
   {{- $globals := .globals }}
   {{- /* globals */}}
   {{- $values := $globals.Values}}
+  {{- $merge_apps := $values.merge_apps }}
   {{- $components := $values.components }}
   {{- $apps := $values.apps }}
   {{- /* local variables */}}
-  {{- $services_per_app := dict }}
-  {{- $merged_app_services := dict }}
+  {{- $merged_apps_services := dict }}
+  {{- $not_merged_apps_services := dict }}
 
   {{- /* loops: public, private */}}
   {{- range $software_type, $software_type_obj := $components }}
@@ -48,12 +49,8 @@ OUTPUT:
           {{- /* loops: projects */}}
           {{- range $project_name, $project_obj := $app_obj }}
             {{- if $project_obj.enabled }}
-              {{- /* creates key/obj: { app_1: {}, app_2: {}} */}}
-              {{- if not (hasKey $services_per_app $app_name) }}
-                {{- $services_per_app = set $services_per_app $app_name dict }}
-              {{- end }}
-
-              {{- $app_yaml := include (printf "%s.%s" $globals.Chart.Name $project_name) (
+              {{- $func_name := printf "%s.%s" $globals.Chart.Name $project_name }}
+              {{- $app_yaml := include ($func_name) (
                     dict
                       "globals" $globals
                       "software_type" $software_type
@@ -63,16 +60,21 @@ OUTPUT:
                       "project_obj" $project_obj
                   ) | fromYaml
               }}
-
-              {{- $app_services = merge $app_services $app_yaml }}
-              {{- if hasKey $services_per_app $app_name }}
-                {{- $service_per_app_2 := get $services_per_app $app_name }}
-                {{- range $key_name, $item := $app_yaml }}
-                {{- $service_per_app_2 = set $service_per_app_2 $key_name $item }}
+              {{- if $merge_apps }}
+                {{- $merged_apps_services = merge $merged_apps_services $app_services }}
+              {{- else }}
+                {{- /* creates key/obj: { app_1: {}, app_2: {}} */}}
+                {{- if not (hasKey $not_merged_apps_services $app_name) }}
+                  {{- $not_merged_apps_services = set $not_merged_apps_services $app_name dict }}
+                {{- end }}
+                {{- $app_services = merge $app_services $app_yaml }}
+                {{- if hasKey $not_merged_apps_services $app_name }}
+                  {{- $app_services_2 := get $not_merged_apps_services $app_name }}
+                  {{- range $key_name, $item := $app_yaml }}
+                  {{- $app_services_2 = set $app_services_2 $key_name $item }}
+                  {{- end }}
                 {{- end }}
               {{- end }}
-
-              {{- $merged_app_services = merge $merged_app_services $app_services }}
             {{- end }}
           {{- end }}
         {{- end }}
@@ -81,8 +83,8 @@ OUTPUT:
   {{- end }}
   {{- $obj := (
         dict
-          "merged_app_services" $merged_app_services
-          "services_per_app" $services_per_app
+          "merged_apps_services" $merged_apps_services
+          "not_merged_apps_services" $not_merged_apps_services
       )
   }}
   {{ $obj | toJson }}
@@ -101,11 +103,11 @@ DESCRIPTION:
     not valid or enabled, it returns default empty output.
 
 ARGS:
-  - $global
+  - globals
       data-type   : dict
       description : Helm's global dict
       example     : {<[helm's object]>}
-  - .depends_on
+  - depends_on
       data-type   :
       description : Lisst of service's name
       example     : [..., "<[service_name]>", ...]
@@ -179,7 +181,7 @@ DESCRIPTION:
   - Checks if a service's depends on are enabled.
 
 ARGS:
-  - $global
+  - globals
       data-type   : dict
       description : Helm's global dict
       example     : {<[helm's object]>}
@@ -250,11 +252,11 @@ DESCRIPTION:
   - Creates a `volume` for a component.
 
 ARGS:
-  - $global
+  - globals
       data-type     : dict
       description   : Helm's global dict
       example       : {<[helm's object]>}
-  - $services_name
+  - services_name
       data-type     : list
       decription    : List of names of each service name
       example       : [..., "<[utility_name]>.<[app_name]>.<[project_name]>", ...]
@@ -326,14 +328,18 @@ DESCRIPTION:
       2) When `.data_type`` is list it create list of service nerwork(s).
 
 ARGS:
-  - $global
+  - globals
       data-type     : dict
       description   : Helm's global dict
       example       : {<[helm's object]>}
   - app_name:
       data-type     : string
       description   : app's name of service
-      example       : {<[helm's object]>}
+      example       : ""
+  - data_type:
+      data-type     : string
+      description   : generate a proper output based on value
+      example       : "dict | list"
 
 RETURN:
   - dict | list
@@ -356,6 +362,7 @@ OUTPUT:
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $app_name := default nil .app_name }}
+  {{- $data_type := default "list" .data_type }}
   {{- /* globals */}}
   {{- $values := $globals.Values }}
   {{- $apps := $values.apps }}
@@ -363,7 +370,6 @@ OUTPUT:
   {{- $default_app_name := $values.default_app_name }}
   {{- /* local variables */}}
   {{- $obj := dict "networks" (dict) }}
-  {{- $data_type := default "list" .data_type }}
 
   {{- if $merge_apps }}
     {{- $network :=  dict
@@ -412,27 +418,27 @@ DESCRIPTION:
   - Creates labels for private and public components
 
 ARGS:
-  - $global
+  - globals
       data-type     : dict
       description   : Helm's global dict
       example       : {<[helm's object]>}
-  - $software_type
+  - software_type
       data-type     : string
       description   : service's software type
       example       : "<[software_type]>"
-  - $utility_name
+  - utility_name
       data-type     : string
       description   : service's utility name
       example       : "<[utilty_name]>"
-  - $app_name
+  - app_name
       data-type     : string
       description   : service's app name
       example       : "<[app_name]>"
-  - $project_name
+  - project_name
       data-type     : string
       description   : service's project name
       example       : "<[project_name]>"
-  - $project_object
+  - project_object
       data-type     : dict
       description   : service's project info
       example       : {..., "key": "value", ...}

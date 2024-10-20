@@ -1,8 +1,49 @@
 {{- /*
+
 TODO:
   - Support multi db per app (same image or different image)
   - make port dynamic
   - Support configs volume.
+
+NOTE:
+  - null
+
+DESCRIPTION:
+  - Generates service
+
+ARGS:
+  - globals
+      data-type   : dict
+      description : Helm's global dict
+      example     : {<[helm's object]>}
+  - software_type
+      data-type     : string
+      description   : service's software type
+      example       : "<[software_type]>"
+  - utility_name
+      data-type     : string
+      description   : service's utility name
+      example       : "<[utilty_name]>"
+  - app_name
+      data-type     : string
+      description   : service's app name
+      example       : "<[app_name]>"
+  - project_name
+      data-type     : string
+      description   : service's project name
+      example       : "<[project_name]>"
+  - project_object
+      data-type     : dict
+      description   : service's project info
+      example       : {..., "key": "value", ...}
+
+RETURN:
+  - yaml
+
+OUTPUT:
+  a:
+    b: c
+
 */}}
 {{- define "docker-compose.postgres" -}}
   {{- /* args */}}
