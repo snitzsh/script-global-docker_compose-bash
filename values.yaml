@@ -9,19 +9,15 @@
 
 #
 # TODO:
+#   - Make _main-fastify and rust, vue to be re-usable templates,
+#     currently what we have cannot be re-used if we create new apps.
 #   - Make sure you throw an error if other component is unsing the same port
 #   - use docker secret volume to pass the password.
-#   - findout why can't I use `-` , right now I am using `_` as
-#     .components[].this_key
 #   - create volumes with the new name standard in main.sh, before it builds
 #     the docker-compose.yml
 #   - for private images handle the tags dinamically on build only and run
 #     locally
 #   - For private image handle local/
-#   - There is still work to do when merge_apps: true, it create volumes for all
-#     containes for each image. It should create one volume per image. Find out
-#     if we need networks and depend_on when building separate containers.
-#
 
 docker_compose_version: "TODO"
 
@@ -119,15 +115,6 @@ components:
           depends_on:
             - public.cache-dbs.snitzsh.redis
 
-  # TODO:
-  # - we may need to specify the app, becauce if we change the name form
-  #   `snitzsh` to `xxx`, this will failed.
-  #   - example:
-  #     apis.snitzsh
-  #           .main-fastify
-  #         .uavs
-  #           .xxxx
-  #
   private:
     apis:
       snitzsh:

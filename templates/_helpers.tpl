@@ -32,6 +32,7 @@ OUTPUT:
   {{- /* globals */}}
   {{- $values := $globals.Values}}
   {{- $components := $values.components }}
+  {{- $apps := $values.apps }}
   {{- /* local variables */}}
   {{- $services_per_app := dict }}
   {{- $merged_app_services := dict }}
@@ -43,34 +44,36 @@ OUTPUT:
       {{- $app_services := dict }}
       {{- /* loops: apps */}}
       {{- range $app_name, $app_obj := $utility_obj }}
-        {{- /* loops: projects */}}
-        {{- range $project_name, $project_obj := $app_obj }}
-          {{- if $project_obj.enabled }}
-            {{- /* creates key/obj: { app_1: {}, app_2: {}} */}}
-            {{- if not (hasKey $services_per_app $app_name) }}
-              {{- $services_per_app = set $services_per_app $app_name dict }}
-            {{- end }}
-
-            {{- $app_yaml := include (printf "%s.%s" $globals.Chart.Name $project_name) (
-                  dict
-                    "globals" $globals
-                    "software_type" $software_type
-                    "utility_name" $utility_name
-                    "app_name" $app_name
-                    "project_name" $project_name
-                    "project_obj" $project_obj
-                ) | fromYaml
-            }}
-
-            {{- $app_services = merge $app_services $app_yaml }}
-            {{- if hasKey $services_per_app $app_name }}
-              {{- $service_per_app_2 := get $services_per_app $app_name }}
-              {{- range $key_name, $item := $app_yaml }}
-              {{- $service_per_app_2 = set $service_per_app_2 $key_name $item }}
+        {{- if has $app_name $apps }}
+          {{- /* loops: projects */}}
+          {{- range $project_name, $project_obj := $app_obj }}
+            {{- if $project_obj.enabled }}
+              {{- /* creates key/obj: { app_1: {}, app_2: {}} */}}
+              {{- if not (hasKey $services_per_app $app_name) }}
+                {{- $services_per_app = set $services_per_app $app_name dict }}
               {{- end }}
-            {{- end }}
 
-            {{- $merged_app_services = merge $merged_app_services $app_services }}
+              {{- $app_yaml := include (printf "%s.%s" $globals.Chart.Name $project_name) (
+                    dict
+                      "globals" $globals
+                      "software_type" $software_type
+                      "utility_name" $utility_name
+                      "app_name" $app_name
+                      "project_name" $project_name
+                      "project_obj" $project_obj
+                  ) | fromYaml
+              }}
+
+              {{- $app_services = merge $app_services $app_yaml }}
+              {{- if hasKey $services_per_app $app_name }}
+                {{- $service_per_app_2 := get $services_per_app $app_name }}
+                {{- range $key_name, $item := $app_yaml }}
+                {{- $service_per_app_2 = set $service_per_app_2 $key_name $item }}
+                {{- end }}
+              {{- end }}
+
+              {{- $merged_app_services = merge $merged_app_services $app_services }}
+            {{- end }}
           {{- end }}
         {{- end }}
       {{- end }}
