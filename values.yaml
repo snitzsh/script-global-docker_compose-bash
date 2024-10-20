@@ -43,7 +43,7 @@ image_only: false
 #   - if `true`, it create one document in docker-compose.yaml
 #     else will create multiple.
 #
-merge_apps: true
+merge_apps: false
 
 # NOTE:
 #   - if `merge_apps: true`, it will use this name for the apps. in docker desktop
@@ -189,7 +189,7 @@ components:
             - private.apis.snitzsh.main-rust
       test:
         main-vue:
-          enabled: false
+          enabled: true
           path: "../../../"
           template:
             language: "vue"

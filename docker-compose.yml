@@ -1,6 +1,6 @@
 ---
 # Source: docker-compose/templates/main.yaml
-name: platform
+name: snitzsh
 services:
   apis-snitzsh-main-rust:
     build:
@@ -30,7 +30,7 @@ services:
     - com.docker.compose.docker-stage=dev-stage
     - com.docker.compose.target-script=dev
     networks:
-    - platform
+    - snitzsh
     platform: linux/arm64
     ports:
     - 3000:3000
@@ -57,7 +57,7 @@ services:
     - com.docker.compose.service-name=cache-dbs-snitzsh-redis
     - com.docker.compose.platform=linux/arm64
     networks:
-    - platform
+    - snitzsh
     platform: linux/arm64
     ports:
     - 6379:6379
@@ -85,7 +85,7 @@ services:
     - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
     - com.docker.compose.platform=linux/arm64
     networks:
-    - platform
+    - snitzsh
     platform: linux/arm64
     ports:
     - 5050:80
@@ -113,7 +113,7 @@ services:
     - com.docker.compose.service-name=dbs-snitzsh-postgres
     - com.docker.compose.platform=linux/arm64
     networks:
-    - platform
+    - snitzsh
     platform: linux/arm64
     ports:
     - 5432:5432
@@ -133,5 +133,51 @@ volumes:
   dbs-snitzsh-postgres:
     driver: local
 networks:
-  platform:
+  snitzsh:
+    driver: bridge
+---
+# Source: docker-compose/templates/main.yaml
+name: test
+services:
+  uis-test-main-vue:
+    build:
+      args:
+        _WORKDIR: /app
+        VITE_APP_PLATFORM_CLUSTER_NAME: dev
+        VITE_APP_PLATFORM_CLUSTER_TYPE: local
+        VITE_APP_PLATFORM_HOST: 0.0.0.0
+        VITE_APP_PLATFORM_PORT: "8080"
+        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
+      context: ../../../uis/test/main-vue
+      dockerfile: Dockerfile
+      target: dev-stage
+    container_name: uis-test-main-vue
+    depends_on: []
+    environment: {}
+    hostname: uis-test-main-vue
+    image: uis-test-main-vue:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=uis
+    - com.docker.compose.app-name=test
+    - com.docker.compose.project-name=main-vue
+    - com.docker.compose.service-name=uis-test-main-vue
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - test
+    platform: linux/arm64
+    ports:
+    - 8080:8080
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ../../../uis/test/main-vue/src:/app/src
+volumes:
+  uis-test-main-vue:
+    driver: local
+networks:
+  test:
     driver: bridge

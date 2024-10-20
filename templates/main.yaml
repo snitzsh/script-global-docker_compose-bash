@@ -1,1 +1,1 @@
-{{- include "docker-compose.functions.services" . }}
+{{- include "docker-compose.functions.main" (dict "globals" .) }}

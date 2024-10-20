@@ -7,16 +7,92 @@ NOTE:
   - null
 
 DESCRIPTION:
-  - Creates services
+  - Creates main componser
 
 ARGS:
-  - .
+  - $global
+      data-type   : dict
+      description : Helm's global dict
+      example     : {<[helm's object]>}
 
 RETURN:
-  - null
+  - yaml
 
+OUTPUT:
+  a:
+    b: test
 */}}
 {{- define "docker-compose.functions.main" -}}
+  {{- /* args */}}
+  {{- $globals :=  .globals }}
+  {{- /* globals */}}
+  {{- $values := $globals.Values}}
+  {{- $merge_apps := $values.merge_apps }}
+  {{- $default_app_name := $values.default_app_name }}
+  {{- $image_only := $values.image_only }}
+  {{- $components := $values.components }}
+  {{- $docker := $values.docker }}
+  {{- /* local variables */}}
+  {{- $services := include "docker-compose.functions.services" (
+        dict
+          "globals" $globals
+      ) | fromJson
+  }}
+  {{- $merged_app_services := $services.merged_app_services }}
+  {{- $services_per_app := $services.services_per_app }}
+
+  {{- if $merge_apps }}
+    {{- if gt (len $merged_app_services) 0 }}
+name: {{ $default_app_name }}
+services:
+      {{- $merged_app_services | toYaml | nindent 2 }}
+      {{- if not $image_only }}
+        {{- if $docker.volumes }}
+          {{- include "docker-compose.volumes" (
+                dict
+                  "globals" $globals
+                  "services_name" (keys $merged_app_services)
+              ) | fromJson | toYaml | nindent 0
+          }}
+        {{- end }}
+        {{- if $docker.networks }}
+          {{- include "docker-compose.functions.normalize-networks" (
+                dict
+                  "globals" $globals
+                  "data_type" "dict"
+              ) | fromJson | toYaml | nindent 0
+          }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- /* Multiple apps on its own docker image */}}
+  {{- else }}
+    {{- range $app_name_2, $app_services_2 := $services_per_app }}
+name: {{ $app_name_2 }}
+services:
+      {{- $app_services_2 | toYaml | nindent 2 }}
+      {{- if not $image_only }}
+        {{- if $docker.volumes }}
+          {{- include "docker-compose.volumes" (
+                dict
+                  "globals" $globals
+                  "services_name" (keys $app_services_2)
+              ) | fromJson | toYaml | nindent 0
+          }}
+        {{- end }}
+        {{- if $docker.networks }}
+          {{- include "docker-compose.functions.normalize-networks" (
+                dict
+                  "globals" $globals
+                  "app_name" $app_name_2
+                  "data_type" "dict"
+              ) | fromJson | toYaml | nindent 0
+          }}
+        {{- end }}
+      {{- end }}
+---
+    {{- end }}
+  {{- end }}
 {{- end }}
 {{- /*
 
@@ -41,22 +117,17 @@ RETURN:
 OUTPUT:
   {
     ...,
-    "<service_name>": {},
+    "<[service_name]>": {},
     ...
   }
 
 */}}
 {{- define "docker-compose.functions.services" -}}
   {{- /* args */}}
-  {{- $globals := . }}
+  {{- $globals := .globals }}
   {{- /* globals */}}
   {{- $values := $globals.Values}}
-  {{- $apps := $values.apps }}
-  {{- $merge_apps := $values.merge_apps }}
-  {{- $default_app_name := $values.default_app_name }}
-  {{- $image_only := $values.image_only }}
   {{- $components := $values.components }}
-  {{- $docker := $values.docker }}
   {{- /* local variables */}}
   {{- $services_per_app := dict }}
   {{- $merged_app_services := dict }}
@@ -68,95 +139,46 @@ OUTPUT:
       {{- $app_services := dict }}
       {{- /* loops: apps */}}
       {{- range $app_name, $app_obj := $utility_obj }}
-        {{- if has $app_name $apps }}
-          {{- /* loops: projects */}}
-          {{- range $project_name, $project_obj := $app_obj }}
-            {{- if $project_obj.enabled }}
-              {{- /* creates key/obj: { app_1: {}, app_2: {}} */}}
-              {{- if not (hasKey $services_per_app $app_name) }}
-                {{- $services_per_app = set $services_per_app $app_name dict }}
-              {{- end }}
-
-              {{- $app_yaml := include (printf "%s.%s" $globals.Chart.Name $project_name) (
-                    dict
-                      "globals" $globals
-                      "software_type" $software_type
-                      "component_name" $utility_name
-                      "app_name" $app_name
-                      "project_name" $project_name
-                      "project_obj" $project_obj
-                  ) | fromYaml
-              }}
-
-              {{- $app_services = merge $app_services $app_yaml }}
-              {{- if hasKey $services_per_app $app_name }}
-                {{- $service_per_app_2 := get $services_per_app $app_name }}
-                {{- range $key_name, $item := $app_yaml }}
-                {{- $service_per_app_2 = set $service_per_app_2 $key_name $item }}
-                {{- end }}
-              {{- end }}
-
-              {{- $merged_app_services = merge $merged_app_services $app_services }}
+        {{- /* loops: projects */}}
+        {{- range $project_name, $project_obj := $app_obj }}
+          {{- if $project_obj.enabled }}
+            {{- /* creates key/obj: { app_1: {}, app_2: {}} */}}
+            {{- if not (hasKey $services_per_app $app_name) }}
+              {{- $services_per_app = set $services_per_app $app_name dict }}
             {{- end }}
+
+            {{- $app_yaml := include (printf "%s.%s" $globals.Chart.Name $project_name) (
+                  dict
+                    "globals" $globals
+                    "software_type" $software_type
+                    "component_name" $utility_name
+                    "app_name" $app_name
+                    "project_name" $project_name
+                    "project_obj" $project_obj
+                ) | fromYaml
+            }}
+
+            {{- $app_services = merge $app_services $app_yaml }}
+            {{- if hasKey $services_per_app $app_name }}
+              {{- $service_per_app_2 := get $services_per_app $app_name }}
+              {{- range $key_name, $item := $app_yaml }}
+              {{- $service_per_app_2 = set $service_per_app_2 $key_name $item }}
+              {{- end }}
+            {{- end }}
+
+            {{- $merged_app_services = merge $merged_app_services $app_services }}
           {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}
-  {{- /* Merged multiple apps. */}}
-  {{- if $merge_apps }}
-    {{- if gt (len $merged_app_services) 0 }}
-name: {{ $default_app_name }}
-services:
-{{- $merged_app_services | toYaml | nindent 2 }}
-      {{- if not $image_only }}
-        {{- if $docker.volumes }}
-{{- include "docker-compose.volumes" (
-      dict
-        "globals" $globals
-        "services_name" (keys $merged_app_services)
-    ) | fromJson | toYaml | nindent 0
-}}
-        {{- end }}
-        {{- if $docker.networks }}
-{{- include "docker-compose.functions.normalize-networks" (
-      dict
-        "globals" $
-        "data_type" "dict"
-    ) | fromJson | toYaml | nindent 0
-}}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- /* Multiple apps on its own docker image */}}
-  {{- else }}
-    {{- range $app_name_2, $app_services_2 := $services_per_app }}
-name: {{ $app_name_2 }}
-services:
-{{- $app_services_2 | toYaml | nindent 2 }}
-      {{- if not $image_only }}
-        {{- if $docker.volumes }}
-
-{{- include "docker-compose.volumes" (
-      dict
-        "globals" $globals
-        "services_name" (keys $app_services_2)
-    ) | fromJson | toYaml | nindent 0
-}}
-        {{- end }}
-        {{- if $docker.networks }}
-{{- include "docker-compose.functions.normalize-networks" (
-      dict
-        "globals" $
-        "app_name" $app_name_2
-        "data_type" "dict"
-    ) | fromJson | toYaml | nindent 0
-}}
-        {{- end }}
-      {{- end }}
----
-    {{- end }}
-  {{- end }}
+  {{- $obj := (
+        dict
+          "merged_app_services" $merged_app_services
+          "services_per_app" $services_per_app
+      )
+  }}
+  {{ $obj | toJson }}
 {{- end }}
 
 {{- /*
