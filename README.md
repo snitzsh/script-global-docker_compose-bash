@@ -43,4 +43,10 @@ psql -h localhost -p 5432 -U root -d \"snitch_db\"
 
 ## REFERENCES
 
+- https://docs.docker.com/reference/compose-file/
+
 - Docker best practices: `https://testdriven.io/blog/docker-best-practices/`
+
+- `https://github.com/compose-spec/compose-spec/blob/main/schema/compose-spec.json`
+
+- https://docs.docker.com/reference/compose-file/services/#secrets
