@@ -123,7 +123,7 @@ components:
     cache-db-uis:
       snitzsh:
         redisinsight:
-          enabled: false
+          enabled: true
           template: ""
           tag: latest
           depends_on:
@@ -150,6 +150,7 @@ components:
         main-rust:
           enabled: true
           template: ""
+          # images: []
           path: "../../../"
           tag: "latest"
           _workdir: /app
@@ -166,10 +167,11 @@ components:
       test:
         main-fastify:
           enabled: false
+          template: ""
+          # images: []
           # Path to the project inside ./snitzsh
           # (assuming you use boilerplate to pull repositories)
           path: "../../../"
-          template: ""
           tag: "latest"
           _workdir: /app
           # opts: dev-stage, build-stage
@@ -188,6 +190,7 @@ components:
         main-vue:
           enabled: false
           template: ""
+          # images: []
           path: "../../../"
           tag: "latest"
           _workdir: /app
@@ -200,8 +203,9 @@ components:
       test:
         main-vue:
           enabled: false
-          path: "../../../"
           template: ""
+          # images: []
+          path: "../../../"
           tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage

@@ -72,6 +72,30 @@ services:
     tty: true
     volumes:
     - ../../../apis/snitzsh/main-rust:/app
+  cache-db-uis-snitzsh-redisinsight:
+    container_name: cache-db-uis-snitzsh-redisinsight
+    depends_on:
+    - cache-dbs-snitzsh-redis
+    environment: {}
+    hostname: cache-db-uis-snitzsh-redisinsight
+    image: redislabs/redisinsight:latest
+    labels:
+    - com.docker.compose.software-type=public
+    - com.docker.compose.component-name=cache-db-uis
+    - com.docker.compose.app-name=snitzsh
+    - com.docker.compose.project-name=redisinsight
+    - com.docker.compose.service-name=cache-db-uis-snitzsh-redisinsight
+    - com.docker.compose.platform=linux/arm64
+    networks:
+    - snitzsh
+    platform: linux/arm64
+    ports:
+    - 5540:5540
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/cache-db-uis-snitzsh-redisinsight:/db
   cache-dbs-snitzsh-redis:
     command: redis-server --save 20 1 --loglevel warning --requirepass root
     container_name: cache-dbs-snitzsh-redis
@@ -158,6 +182,8 @@ services:
     - ./volumes/dbs-snitzsh-postgres/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 volumes:
   apis-snitzsh-main-rust:
+    driver: local
+  cache-db-uis-snitzsh-redisinsight:
     driver: local
   cache-dbs-snitzsh-redis:
     driver: local

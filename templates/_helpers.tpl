@@ -57,11 +57,14 @@ OUTPUT:
                 {{- $func_name = printf "%s.%s" $globals.Chart.Name ($project_template) }}
               {{- end }}
 
-              {{- $project_path := default "../../../" $project_obj.path }}
+              {{- $service_name := printf "%s-%s-%s" $utility_name $app_name $project_name }}
+              {{- $folder_name := printf "%s/%s/%s" $utility_name $app_name $project_name }}
+              {{- /* Project configs defaults */}}
               {{- $new_project_dict := (
                     dict
                       "enabled" $project_enabled
                       "template" $project_template
+                      "images" (default list $project_obj.images)
                       "path" (default "../../../" $project_obj.path)
                       "tag" (default "latest" $project_obj.tag)
                       "_workdir" (default "/app" $project_obj._workdir)
@@ -70,8 +73,19 @@ OUTPUT:
                       "host" (default "0.0.0.0" $project_obj.host)
                       "port" (default 80 $project_obj.port)
                       "depends_on" (default list $project_obj.depends_on)
+                      "service_name" $service_name
+                      "folder_name" $folder_name
                   )
               }}
+              {{- $new_project_dict = set $new_project_dict "depends_on_2" (
+                    include "docker-compose.functions.depends-on" (
+                      dict
+                        "globals" $globals
+                        "depends_on" $new_project_dict.depends_on
+                    ) | fromJson | toYaml
+                  )
+              }}
+
               {{- $app_yaml := include $func_name (
                     dict
                       "globals" $globals

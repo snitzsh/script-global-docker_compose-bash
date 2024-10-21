@@ -59,17 +59,12 @@ OUTPUT:
   {{- $path := $project_obj.path }}
   {{- $workdir := $project_obj._workdir }}
   {{- $tag := $project_obj.tag }}
-  {{- $depends_on := $project_obj.depends_on }}
+  {{- $depends_on_2 := $project_obj.depends_on_2 }}
+  {{- $service_name := $project_obj.service_name }}
+  {{- $folder_name := $project_obj.folder_name }}
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $utility_name $app_name $project_name }}
-  {{- $folder_name := printf "%s/%s/%s" $utility_name $app_name $project_name }}
   {{- /* imported modules */}}
-  {{- $depends_on_2 := include "docker-compose.functions.depends-on" (
-        dict
-          "globals" $globals
-          "depends_on" $depends_on
-      ) | fromJson | toYaml | nindent 2
-  }}
+
   {{- $service_labels := (
         include "docker-compose.functions.service-labels" .
       ) | fromJson | toYaml | nindent 2
@@ -102,6 +97,6 @@ OUTPUT:
   ports:
     - "5050:80"
   {{ $networks }}
-  {{ $depends_on_2 }}
+  {{ $depends_on_2 | nindent 2 }}
   {{- end }}
 {{- end }}
