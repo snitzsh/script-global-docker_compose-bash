@@ -77,11 +77,25 @@ OUTPUT:
                       "folder_name" $folder_name
                   )
               }}
+              {{- /* depends_on */}}
               {{- $new_project_dict = set $new_project_dict "depends_on_2" (
                     include "docker-compose.functions.depends-on" (
                       dict
                         "globals" $globals
                         "depends_on" $new_project_dict.depends_on
+                    ) | fromJson | toYaml
+                  )
+              }}
+              {{- /* labels */}}
+              {{- $new_project_dict = set $new_project_dict "labels_yaml" (
+                    include "docker-compose.functions.service-labels" (
+                      dict
+                        "globals" $globals
+                        "software_type" $software_type
+                        "utility_name" $utility_name
+                        "app_name" $app_name
+                        "project_name" $project_name
+                        "project_obj" $new_project_dict
                     ) | fromJson | toYaml
                   )
               }}

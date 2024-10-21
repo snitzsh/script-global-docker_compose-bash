@@ -67,13 +67,9 @@ OUTPUT:
   {{- $depends_on_2 := $project_obj.depends_on_2 }}
   {{- $service_name := $project_obj.service_name }}
   {{- $folder_name := $project_obj.folder_name }}
+  {{- $labels_yaml := $project_obj.labels_yaml }}
   {{- /* local variables */}}
   {{- /* imported modules */}}
-
-  {{- $service_labels := (
-        include "docker-compose.functions.service-labels" .
-      ) | fromJson | toYaml | nindent 2
-  }}
   {{- $networks := include "docker-compose.networks" (
         dict
           "globals" $globals
@@ -98,7 +94,7 @@ OUTPUT:
     {{- /*
       - "./configs/{{ $service_name }}/config:/user/local/etc/redis"
     */}}
-  {{ $service_labels }}
+  {{ $labels_yaml | nindent 2 }}
   expose:
     - "6379"
   ports:
