@@ -15,7 +15,7 @@
   {{- $path := $project_obj.path }}
   {{- $workdir := $project_obj._workdir }}
   {{- $tag := $project_obj.tag }}
-  {{- $depends_on_2 := $project_obj.depends_on_2 }}
+  {{- $depends_on_yaml := $project_obj.depends_on_yaml }}
   {{- $service_name := $project_obj.service_name }}
   {{- $folder_name := $project_obj.folder_name }}
   {{- $labels_yaml := $project_obj.labels_yaml }}
@@ -61,6 +61,6 @@
     - "5432:5432"
   */}}
   {{ $networks_yaml | nindent 2 }}
-  {{ $depends_on_2 | nindent 2 }}
+  {{ $depends_on_yaml | nindent 2 }}
   {{- end }}
 {{- end }}

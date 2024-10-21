@@ -77,25 +77,25 @@ OUTPUT:
                       "folder_name" $folder_name
                   )
               }}
+              {{- $args := dict
+                    "globals" $globals
+                    "software_type" $software_type
+                    "utility_name" $utility_name
+                    "app_name" $app_name
+                    "project_name" $project_name
+                    "project_obj" $new_project_dict
+              }}
               {{- /* depends_on */}}
-              {{- $new_project_dict = set $new_project_dict "depends_on_2" (
+              {{- $new_project_dict = set $new_project_dict "depends_on_yaml" (
                     include "docker-compose.functions.depends-on" (
-                      dict
-                        "globals" $globals
-                        "depends_on" $new_project_dict.depends_on
+                      $args
                     ) | fromJson | toYaml
                   )
               }}
               {{- /* labels */}}
               {{- $new_project_dict = set $new_project_dict "labels_yaml" (
                     include "docker-compose.functions.service-labels" (
-                      dict
-                        "globals" $globals
-                        "software_type" $software_type
-                        "utility_name" $utility_name
-                        "app_name" $app_name
-                        "project_name" $project_name
-                        "project_obj" $new_project_dict
+                      $args
                     ) | fromJson | toYaml
                   )
               }}
@@ -110,13 +110,7 @@ OUTPUT:
                   )
               }}
               {{- $app_yaml := include $func_name (
-                    dict
-                      "globals" $globals
-                      "software_type" $software_type
-                      "utility_name" $utility_name
-                      "app_name" $app_name
-                      "project_name" $project_name
-                      "project_obj" $new_project_dict
+                    $args
                   ) | fromYaml
               }}
               {{- if $merge_apps }}
@@ -183,7 +177,8 @@ OUTPUT:
 {{- define "docker-compose.functions.depends-on" -}}
   {{- /* args */}}
   {{- $globals := .globals }}
-  {{- $depends_on := default list .depends_on }}
+  {{- $project_obj := .project_obj }}
+  {{- $depends_on := $project_obj.depends_on }}
   {{- /* globals */}}
   {{- $values := $globals.Values }}
   {{- $apps := $values.apps }}
