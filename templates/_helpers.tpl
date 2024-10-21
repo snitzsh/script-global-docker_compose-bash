@@ -99,7 +99,16 @@ OUTPUT:
                     ) | fromJson | toYaml
                   )
               }}
-
+              {{- /* networks (per service) */}}
+              {{- $new_project_dict = set $new_project_dict "networks_yaml" (
+                    include "docker-compose.functions.networks" (
+                      dict
+                        "globals" $globals
+                        "app_name" $app_name
+                        "data_type" "list"
+                    ) | fromJson | toYaml
+                  )
+              }}
               {{- $app_yaml := include $func_name (
                     dict
                       "globals" $globals
@@ -383,9 +392,9 @@ ARGS:
       description   : Helm's global dict
       example       : {<[helm's object]>}
   - app_name:
-      data-type     : string
-      description   : app's name of service
-      example       : ""
+      data-type     : string (optional)
+      description   : app's name from $.apps[] or nill
+      example       : "<[app_name]>" | nil
   - data_type:
       data-type     : string
       description   : generate a proper output based on value

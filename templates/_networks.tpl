@@ -7,7 +7,7 @@ NOTE:
   - null
 
 DESCRIPTION:
-  - Reusuable funciton that will generate networks.
+  - Generates network per compose file (not service)
 
 ARGS:
   - globals
@@ -16,8 +16,8 @@ ARGS:
       example       : {<[helm's object]>}
   - app_name:
       data-type     : string (optional)
-      description   : app's name of service
-      example       : ""
+      description   : app's name from $.apps[] or nill
+      example       : "<[app_name]>" | nil
   - data_type:
       data-type     : string
       description   : generate a proper output based on value
@@ -29,7 +29,7 @@ RETURN:
 OUTPUT:
   {
     ...,
-    "<[service_name]>": {},
+    "<[app_name]>": {},
     ...
   }
 

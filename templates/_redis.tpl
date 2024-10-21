@@ -68,15 +68,9 @@ OUTPUT:
   {{- $service_name := $project_obj.service_name }}
   {{- $folder_name := $project_obj.folder_name }}
   {{- $labels_yaml := $project_obj.labels_yaml }}
+  {{- $networks_yaml := $project_obj.networks_yaml }}
   {{- /* local variables */}}
   {{- /* imported modules */}}
-  {{- $networks := include "docker-compose.networks" (
-        dict
-          "globals" $globals
-          "app_name" $app_name
-          "data_type" "list"
-      ) | fromJson | toYaml | nindent 2
-  }}
 
 {{ $service_name }}:
   image: "{{ $project_name }}:{{ $tag }}"
@@ -100,7 +94,7 @@ OUTPUT:
   ports:
     - "6379:6379"
   command: "redis-server --save 20 1 --loglevel warning --requirepass {{ $values.auth.password }}"
-  {{ $networks }}
+  {{ $networks_yaml | nindent 2 }}
   {{ $depends_on_2 | nindent 2 }}
   {{- end }}
 {{- end }}
