@@ -24,6 +24,7 @@ docker_compose_version: "TODO"
 # IMPORRANT:
 #   - name cannot have the same name as software, utility, project.
 apps:
+  - global
   - snitzsh
   - test
 #
@@ -88,23 +89,27 @@ components:
       snitzsh:
         postgres:
           enabled: true
+          template: ""
           tag: latest
           depends_on: []
       test:
         postgres:
           enabled: false
+          template: ""
           tag: latest
           depends_on: []
     db-uis:
       snitzsh:
         pgadmin4:
           enabled: true
+          template: ""
           tag: latest
           depends_on:
             - public.dbs.snitzsh.postgres
       test:
         pgadmin4:
           enabled: false
+          template: ""
           tag: latest
           depends_on:
             - public.dbs.test.postgres
@@ -112,34 +117,43 @@ components:
       snitzsh:
         redis:
           enabled: true
+          template: ""
           tag: latest
           depends_on: []
     cache-db-uis:
       snitzsh:
         redisinsight:
           enabled: false
+          template: ""
           tag: latest
           depends_on:
             - public.cache-dbs.snitzsh.redis
       test:
         redisinsight:
           enabled: false
+          template: ""
           tag: latest
           depends_on:
             - public.cache-dbs.snitzsh.redis
 
   private:
+    scripts:
+      global:
+        machine_set_up-bash:
+          enabled: true
+          template: "operating-systems"
+          images:
+            - name: ubuntu
+              tag: latest
     apis:
       snitzsh:
         main-rust:
           enabled: true
+          template: ""
           path: "../../../"
           tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage
-          template:
-            language: "rust"
-            type: apis # apis | ui | job | cronjob
           # TODO:
           #  - findout if .cargo/config.toml is equivalent to package.json in node
           #    maybe for rust is not neccesary.
@@ -155,9 +169,7 @@ components:
           # Path to the project inside ./snitzsh
           # (assuming you use boilerplate to pull repositories)
           path: "../../../"
-          template:
-            language: "fastify"
-            type: apis # apis | ui | job | cronjob
+          template: ""
           tag: "latest"
           _workdir: /app
           # opts: dev-stage, build-stage
@@ -175,9 +187,7 @@ components:
       snitzsh:
         main-vue:
           enabled: false
-          template:
-            language: "vue"
-            type: ui # apis | ui | job | cronjob
+          template: ""
           path: "../../../"
           tag: "latest"
           _workdir: /app
@@ -189,11 +199,9 @@ components:
             - private.apis.snitzsh.main-rust
       test:
         main-vue:
-          enabled: true
+          enabled: false
           path: "../../../"
-          template:
-            language: "vue"
-            type: ui # apis | ui | job | cronjob
+          template: ""
           tag: "latest"
           _workdir: /app
           target: "dev-stage" # dockerfile stage

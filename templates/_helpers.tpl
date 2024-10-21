@@ -48,16 +48,38 @@ OUTPUT:
         {{- if has $app_name $apps }}
           {{- /* loops: projects */}}
           {{- range $project_name, $project_obj := $app_obj }}
-            {{- if $project_obj.enabled }}
-              {{- $func_name := printf "%s.%s" $globals.Chart.Name $project_name }}
-              {{- $app_yaml := include ($func_name) (
+            {{- $project_enabled := default false $project_obj.enabled }}
+
+            {{- if $project_enabled }}
+              {{- $func_name := printf "%s.%s" $globals.Chart.Name ($project_name) }}
+              {{- $project_template := default "" $project_obj.template }}
+              {{- if gt (len $project_template) 0 }}
+                {{- $func_name = printf "%s.%s" $globals.Chart.Name ($project_template) }}
+              {{- end }}
+
+              {{- $project_path := default "../../../" $project_obj.path }}
+              {{- $new_project_dict := (
+                    dict
+                      "enabled" $project_enabled
+                      "template" $project_template
+                      "path" (default "../../../" $project_obj.path)
+                      "tag" (default "latest" $project_obj.tag)
+                      "_workdir" (default "/app" $project_obj._workdir)
+                      "target" (default "dev-stage" $project_obj.target)
+                      "target_script" (default "dev" $project_obj.target_script)
+                      "host" (default "0.0.0.0" $project_obj.host)
+                      "port" (default 80 $project_obj.port)
+                      "depends_on" (default list $project_obj.depends_on)
+                  )
+              }}
+              {{- $app_yaml := include $func_name (
                     dict
                       "globals" $globals
                       "software_type" $software_type
                       "utility_name" $utility_name
                       "app_name" $app_name
                       "project_name" $project_name
-                      "project_obj" $project_obj
+                      "project_obj" $new_project_dict
                   ) | fromYaml
               }}
               {{- if $merge_apps }}
@@ -456,7 +478,7 @@ OUTPUT:
   {{- /* args */}}
   {{- $globals := .globals }}
   {{- $software_type := .software_type }}
-  {{- $utility_name := .component_name }}
+  {{- $utility_name := .utility_name }}
   {{- $app_name := .app_name }}
   {{- $project_name := .project_name }}
   {{- $project_obj := .project_obj }}

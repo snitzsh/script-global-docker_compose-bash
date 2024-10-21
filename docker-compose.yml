@@ -1,5 +1,38 @@
 ---
 # Source: docker-compose/templates/main.yaml
+name: global
+services:
+  scripts-global-machine_set_up-bash:
+    container_name: scripts-global-machine_set_up-bash
+    depends_on: []
+    environment: {}
+    image: machine_set_up-bash:latest
+    labels:
+    - com.docker.compose.software-type=private
+    - com.docker.compose.component-name=scripts
+    - com.docker.compose.app-name=global
+    - com.docker.compose.project-name=machine_set_up-bash
+    - com.docker.compose.service-name=scripts-global-machine_set_up-bash
+    - com.docker.compose.platform=linux/arm64
+    - com.docker.compose.docker-stage=dev-stage
+    - com.docker.compose.target-script=dev
+    networks:
+    - global
+    platform: linux/arm64
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+    - ./volumes/scripts-global-machine_set_up-bash/data:/var/lib/postgresql/data
+    - ./volumes/scripts-global-machine_set_up-bash/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+volumes:
+  scripts-global-machine_set_up-bash:
+    driver: local
+networks:
+  global:
+    driver: bridge
+---
+# Source: docker-compose/templates/main.yaml
 name: snitzsh
 services:
   apis-snitzsh-main-rust:
@@ -22,10 +55,10 @@ services:
     image: apis-snitzsh-main-rust:latest
     labels:
     - com.docker.compose.software-type=private
-    - com.docker.compose.component-name=%!s(<nil>)
+    - com.docker.compose.component-name=apis
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=main-rust
-    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-main-rust
+    - com.docker.compose.service-name=apis-snitzsh-main-rust
     - com.docker.compose.platform=linux/arm64
     - com.docker.compose.docker-stage=dev-stage
     - com.docker.compose.target-script=dev
@@ -51,10 +84,10 @@ services:
     image: redis:latest
     labels:
     - com.docker.compose.software-type=public
-    - com.docker.compose.component-name=%!s(<nil>)
+    - com.docker.compose.component-name=cache-dbs
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=redis
-    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-redis
+    - com.docker.compose.service-name=cache-dbs-snitzsh-redis
     - com.docker.compose.platform=linux/arm64
     networks:
     - snitzsh
@@ -79,10 +112,10 @@ services:
     image: dpage/pgadmin4:latest
     labels:
     - com.docker.compose.software-type=public
-    - com.docker.compose.component-name=%!s(<nil>)
+    - com.docker.compose.component-name=db-uis
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=pgadmin4
-    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-pgadmin4
+    - com.docker.compose.service-name=db-uis-snitzsh-pgadmin4
     - com.docker.compose.platform=linux/arm64
     networks:
     - snitzsh
@@ -107,10 +140,10 @@ services:
     image: postgres:latest
     labels:
     - com.docker.compose.software-type=public
-    - com.docker.compose.component-name=%!s(<nil>)
+    - com.docker.compose.component-name=dbs
     - com.docker.compose.app-name=snitzsh
     - com.docker.compose.project-name=postgres
-    - com.docker.compose.service-name=%!s(<nil>)-snitzsh-postgres
+    - com.docker.compose.service-name=dbs-snitzsh-postgres
     - com.docker.compose.platform=linux/arm64
     networks:
     - snitzsh
@@ -134,50 +167,4 @@ volumes:
     driver: local
 networks:
   snitzsh:
-    driver: bridge
----
-# Source: docker-compose/templates/main.yaml
-name: test
-services:
-  uis-test-main-vue:
-    build:
-      args:
-        _WORKDIR: /app
-        VITE_APP_PLATFORM_CLUSTER_NAME: dev
-        VITE_APP_PLATFORM_CLUSTER_TYPE: local
-        VITE_APP_PLATFORM_HOST: 0.0.0.0
-        VITE_APP_PLATFORM_PORT: "8080"
-        VITE_APP_PLATFORM_SCRIPT_TARGET: dev
-      context: ../../../uis/test/main-vue
-      dockerfile: Dockerfile
-      target: dev-stage
-    container_name: uis-test-main-vue
-    depends_on: []
-    environment: {}
-    hostname: uis-test-main-vue
-    image: uis-test-main-vue:latest
-    labels:
-    - com.docker.compose.software-type=private
-    - com.docker.compose.component-name=%!s(<nil>)
-    - com.docker.compose.app-name=test
-    - com.docker.compose.project-name=main-vue
-    - com.docker.compose.service-name=%!s(<nil>)-test-main-vue
-    - com.docker.compose.platform=linux/arm64
-    - com.docker.compose.docker-stage=dev-stage
-    - com.docker.compose.target-script=dev
-    networks:
-    - test
-    platform: linux/arm64
-    ports:
-    - 8080:8080
-    restart: always
-    stdin_open: true
-    tty: true
-    volumes:
-    - ../../../uis/test/main-vue/src:/app/src
-volumes:
-  uis-test-main-vue:
-    driver: local
-networks:
-  test:
     driver: bridge
