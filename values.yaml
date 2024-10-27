@@ -67,7 +67,7 @@ registries:
 #   - in boilerplate get the architecture by running this command: `docker version`
 #     look for the Server: OS/Arch
 #   - Do we need this for public images?
-platform: "linux/arm64" # otherlinux: `linux/amd64` | mac m*: `linux/arm64`
+platform: "linux/amd64" # otherlinux: `linux/amd64` | mac m*: `linux/arm64`
 
 #
 #  TODO:
@@ -88,7 +88,7 @@ components:
       # app_name
       snitzsh:
         postgres:
-          enabled: true
+          enabled: false
           template: ""
           tag: latest
           depends_on: []
@@ -101,7 +101,7 @@ components:
     db-uis:
       snitzsh:
         pgadmin4:
-          enabled: true
+          enabled: false
           template: ""
           tag: latest
           depends_on:
@@ -116,14 +116,14 @@ components:
     cache-dbs:
       snitzsh:
         redis:
-          enabled: true
+          enabled: false
           template: ""
           tag: latest
           depends_on: []
     cache-db-uis:
       snitzsh:
         redisinsight:
-          enabled: true
+          enabled: false
           template: ""
           tag: latest
           depends_on:
@@ -141,14 +141,23 @@ components:
       global:
         machine_set_up-bash:
           enabled: true
-          template: "operating-systems"
-          images:
-            - name: ubuntu
-              tag: latest
+          template: ""
+          images: []
+          path: "../../../"
+          tag: "latest"
+          _workdir: /app
+          target: "ubuntu-dev-stage" # dockerfile stage
+          # TODO:
+          #  - findout if .cargo/config.toml is equivalent to package.json in node
+          #    maybe for rust is not neccesary.
+          target_script: "dev"
+          host: "0.0.0.0"
+          port: "3000" # this will be dynamic handled by helm
+          depends_on: []
     apis:
       snitzsh:
         main-rust:
-          enabled: true
+          enabled: false
           template: ""
           # images: []
           path: "../../../"

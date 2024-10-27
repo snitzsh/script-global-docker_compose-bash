@@ -35,8 +35,8 @@ dockerComposeUp () {
       --progress "auto" \
       up \
         --build \
-        --detach \
-        --force-recreate
+        --detach
+        # --force-recreate
         # --no-log-prefix
         # --no-start
 }
@@ -90,7 +90,7 @@ main () {
     # TODO: make sure to handle 2 documnet output.
     # TODO: support --arguments to override
     helm template . > "./${file_name}"
-    exit 1
+    # exit 1
     sleep 3
     dockerComposeUp ${file_name}
     # Gets the API of postgress

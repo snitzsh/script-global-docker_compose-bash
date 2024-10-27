@@ -519,10 +519,10 @@ OUTPUT:
   {{- $platform := $values.platform }}
   {{- $domain := $values.domain }}
   {{- /* local variables */}}
-  {{- $service_name := printf "%s-%s-%s" $utility_name $app_name $project_name }}
+  {{- $service_name := $project_obj.service_name }}
   {{- $labels := list
         (printf "%s.software-type=%s" $domain $software_type)
-        (printf "%s.component-name=%s" $domain $utility_name)
+        (printf "%s.utility-type=%s" $domain $utility_name)
         (printf "%s.app-name=%s" $domain $app_name)
         (printf "%s.project-name=%s" $domain $project_name)
         (printf "%s.service-name=%s" $domain $service_name)
